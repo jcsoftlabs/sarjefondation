@@ -111,6 +111,18 @@ model LoginAttempt {
   @@index([identifier, createdAt])
 }
 
+model Donation {
+  id                    String         @id @default(cuid())
+  amountCents           Int
+  currency              String         @default("usd")
+  donorName             String?
+  donorEmail            String?
+  stripePaymentIntentId String         @unique
+  status                DonationStatus @default(PENDING)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+}
+
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String
@@ -124,4 +136,10 @@ model AuditLog {
 enum Status {
   DRAFT
   PUBLISHED
+}
+
+enum DonationStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
 }

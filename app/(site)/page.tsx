@@ -57,7 +57,7 @@ export default async function HomePage() {
             communautaire, portés par des équipes présentes sur le terrain.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <ButtonLink href="/s-impliquer" variant="primary">
+            <ButtonLink href="/don" variant="primary">
               Faire un don
             </ButtonLink>
             <ButtonLink href="/programmes" variant="secondary">

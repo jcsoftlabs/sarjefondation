@@ -205,7 +205,7 @@ function PaymentStep({ onError }: { onError: (message: string) => void }) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/s-impliquer`,
+        return_url: `${window.location.origin}/don`,
       },
     });
     setPending(false);

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/cn";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 
 const navLinks = [
   { href: "/la-fondation", label: "La fondation" },
@@ -19,7 +20,7 @@ export function Header() {
 
   return (
     <header className="border-b border-line bg-paper">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 md:px-6">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:px-6">
         <Link href="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
           <Image
             src="/logo-fondation.png"
@@ -42,40 +43,50 @@ export function Header() {
           ))}
         </nav>
 
-        <button
-          type="button"
-          className="flex items-center justify-center rounded-sm border border-line p-2 md:hidden"
-          aria-expanded={menuOpen}
-          aria-controls="mobile-nav"
-          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          onClick={() => setMenuOpen((value) => !value)}
-        >
-          <span className="sr-only">{menuOpen ? "Fermer le menu" : "Ouvrir le menu"}</span>
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 22 22"
-            fill="none"
-            aria-hidden="true"
-            className="text-ink"
+        <div className="flex items-center gap-2">
+          <ButtonLink
+            href="/don"
+            variant="primary"
+            className="px-4 py-2 text-sm"
           >
-            {menuOpen ? (
-              <path
-                d="M4 4l14 14M18 4L4 18"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            ) : (
-              <path
-                d="M3 6h16M3 11h16M3 16h16"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            )}
-          </svg>
-        </button>
+            Faire un don
+          </ButtonLink>
+
+          <button
+            type="button"
+            className="flex items-center justify-center rounded-sm border border-line p-2 md:hidden"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            <span className="sr-only">{menuOpen ? "Fermer le menu" : "Ouvrir le menu"}</span>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              fill="none"
+              aria-hidden="true"
+              className="text-ink"
+            >
+              {menuOpen ? (
+                <path
+                  d="M4 4l14 14M18 4L4 18"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              ) : (
+                <path
+                  d="M3 6h16M3 11h16M3 16h16"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       <nav

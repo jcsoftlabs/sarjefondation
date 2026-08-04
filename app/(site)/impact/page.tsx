@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -8,10 +9,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ImpactPage() {
-  const [impactStats, testimonials, galleryPhotos] = await Promise.all([
+  const [impactStats, testimonials, albums] = await Promise.all([
     prisma.impactStat.findMany({ orderBy: { order: "asc" } }),
     prisma.testimonial.findMany({ orderBy: { order: "asc" }, include: { photo: true } }),
-    prisma.galleryPhoto.findMany({ orderBy: { order: "asc" }, include: { photo: true } }),
+    prisma.album.findMany({
+      orderBy: { order: "asc" },
+      include: { cover: true, _count: { select: { photos: true } } },
+    }),
   ]);
 
   return (
@@ -44,7 +48,7 @@ export default async function ImpactPage() {
 
       <div className="mt-16">
         <h2 className="font-display text-h2 text-ink">Sur le terrain</h2>
-        {galleryPhotos.length === 0 ? (
+        {albums.length === 0 ? (
           <div className="mt-6 rounded-md border border-dashed border-line p-8 text-center">
             <p className="text-body text-muted">
               Galerie de terrain à venir, une fois les photos et
@@ -52,22 +56,33 @@ export default async function ImpactPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {galleryPhotos.map((item) => (
-              <figure key={item.id}>
-                <Image
-                  src={item.photo.url}
-                  alt={item.photo.alt}
-                  width={360}
-                  height={270}
-                  className="aspect-4/3 w-full rounded-md object-cover"
-                />
-                {item.caption && (
-                  <figcaption className="mt-1.5 text-xs text-muted">
-                    {item.caption}
-                  </figcaption>
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {albums.map((album) => (
+              <Link
+                key={album.id}
+                href={`/galerie/${album.slug}`}
+                className="group block overflow-hidden rounded-md border border-line transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+              >
+                {album.cover ? (
+                  <Image
+                    src={album.cover.url}
+                    alt={album.cover.alt}
+                    width={360}
+                    height={270}
+                    className="aspect-4/3 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="aspect-4/3 w-full bg-line/30" />
                 )}
-              </figure>
+                <div className="p-3">
+                  <p className="text-sm font-semibold text-ink group-hover:text-accent-deep">
+                    {album.title}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {album._count.photos} photo{album._count.photos > 1 ? "s" : ""}
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
         )}

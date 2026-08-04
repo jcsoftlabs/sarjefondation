@@ -226,7 +226,7 @@ export default async function HomePage() {
             Votre engagement change des vies concrètes.
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink/80 md:text-xl">
-            Bénévolat, partenariat ou don : il existe une façon de s&rsquo;impliquer adaptée à chacun. Rejoignez-nous pour construire l'avenir.
+            Bénévolat, partenariat ou don : il existe une façon de s&rsquo;impliquer adaptée à chacun. Rejoignez-nous pour construire l&rsquo;avenir.
           </p>
           <div className="mt-12 flex justify-center">
             <Link 

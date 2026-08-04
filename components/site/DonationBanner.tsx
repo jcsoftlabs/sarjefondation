@@ -7,11 +7,9 @@ export function DonationBanner() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check if user has closed it previously, here we just show it for the demo
     const closed = sessionStorage.getItem("donation-banner-closed");
-    if (!closed) {
-      setIsVisible(true);
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lu depuis sessionStorage, indisponible au premier rendu serveur
+    setIsVisible(!closed);
   }, []);
 
   const handleClose = () => {

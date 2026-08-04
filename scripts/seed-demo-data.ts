@@ -39,6 +39,7 @@ async function main() {
     teamMembers: [],
     testimonials: [],
     impactStats: [],
+    albums: [],
     galleryPhotos: [],
   };
 
@@ -325,27 +326,64 @@ async function main() {
   ]);
   manifest.impactStats = impactStats.map((s) => s.id);
 
-  console.log("Création de la galerie…");
-  const galleryCaptions: [string, string][] = [
-    ["galerie1", "Cours de soutien scolaire, communauté de Cabaret"],
-    ["galerie2", "Consultation lors d'une tournée de la clinique mobile"],
-    ["galerie3", "Rencontre communautaire mensuelle"],
-    ["galerie4", "L'équipe de la fondation en déplacement"],
-    ["galerie5", "Distribution de kits d'hygiène"],
-    ["galerie6", "Atelier de parentalité en cours"],
+  console.log("Création des albums…");
+  const albumsData: {
+    title: string;
+    slug: string;
+    description: string;
+    coverKey: keyof typeof covers;
+    photos: [keyof typeof covers, string][];
+  }[] = [
+    {
+      title: "Programme Éducation",
+      slug: "programme-education",
+      description: "Le programme Éducation sur le terrain, au fil des tournées.",
+      coverKey: "galerie1",
+      photos: [
+        ["galerie1", "Cours de soutien scolaire, communauté de Cabaret"],
+        ["galerie2", "Consultation lors d'une tournée de la clinique mobile"],
+      ],
+    },
+    {
+      title: "Journée communautaire",
+      slug: "journee-communautaire",
+      description: "Retour en images sur une journée d'activités communautaires.",
+      coverKey: "galerie3",
+      photos: [
+        ["galerie3", "Rencontre communautaire mensuelle"],
+        ["galerie4", "L'équipe de la fondation en déplacement"],
+        ["galerie5", "Distribution de kits d'hygiène"],
+        ["galerie6", "Atelier de parentalité en cours"],
+      ],
+    },
   ];
-  const galleryPhotos = await Promise.all(
-    galleryCaptions.map(([key, caption], index) =>
-      prisma.galleryPhoto.create({
-        data: {
-          photoId: covers[key as keyof typeof covers].id,
-          caption,
-          order: index,
-        },
-      }),
-    ),
-  );
-  manifest.galleryPhotos = galleryPhotos.map((g) => g.id);
+
+  for (const [index, albumData] of albumsData.entries()) {
+    const album = await prisma.album.create({
+      data: {
+        title: albumData.title,
+        slug: albumData.slug,
+        description: albumData.description,
+        coverId: covers[albumData.coverKey].id,
+        order: index,
+      },
+    });
+    manifest.albums.push(album.id);
+
+    const photos = await Promise.all(
+      albumData.photos.map(([key, caption], photoIndex) =>
+        prisma.galleryPhoto.create({
+          data: {
+            albumId: album.id,
+            photoId: covers[key].id,
+            caption,
+            order: photoIndex,
+          },
+        }),
+      ),
+    );
+    manifest.galleryPhotos.push(...photos.map((p) => p.id));
+  }
 
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
   console.log(`\nContenu de démonstration créé. Manifeste écrit dans ${MANIFEST_PATH}`);

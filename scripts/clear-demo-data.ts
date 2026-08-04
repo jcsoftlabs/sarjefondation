@@ -15,6 +15,7 @@ type Manifest = {
   teamMembers: string[];
   testimonials: string[];
   impactStats: string[];
+  albums: string[];
   galleryPhotos: string[];
 };
 
@@ -27,10 +28,13 @@ async function main() {
   const manifest: Manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
 
   // Les entités qui référencent un média sont retirées avant le média
-  // lui-même, même si la contrainte est en ON DELETE SET NULL et
-  // permettrait l'ordre inverse — plus explicite ainsi.
+  // lui-même, même si la contrainte est en ON DELETE SET NULL/CASCADE et
+  // permettrait un ordre différent — plus explicite ainsi.
   const galleryPhotos = await prisma.galleryPhoto.deleteMany({
     where: { id: { in: manifest.galleryPhotos } },
+  });
+  const albums = await prisma.album.deleteMany({
+    where: { id: { in: manifest.albums } },
   });
   const impactStats = await prisma.impactStat.deleteMany({
     where: { id: { in: manifest.impactStats } },
@@ -55,6 +59,7 @@ async function main() {
     JSON.stringify(
       {
         galleryPhotos: galleryPhotos.count,
+        albums: albums.count,
         impactStats: impactStats.count,
         testimonials: testimonials.count,
         teamMembers: teamMembers.count,

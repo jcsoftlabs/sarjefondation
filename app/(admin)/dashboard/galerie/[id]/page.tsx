@@ -2,39 +2,54 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { updateGalleryPhoto } from "@/lib/actions/gallery";
-import { GalleryPhotoForm } from "@/components/admin/GalleryPhotoForm";
+import { updateAlbum } from "@/lib/actions/albums";
+import { AlbumForm } from "@/components/admin/AlbumForm";
+import { AlbumPhotosManager } from "@/components/admin/AlbumPhotosManager";
 
-export const metadata: Metadata = { title: "Modifier la photo", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Modifier l'album", robots: { index: false, follow: false } };
 
-export default async function EditGalleryPhotoPage(
+export default async function EditAlbumPage(
   props: PageProps<"/dashboard/galerie/[id]">,
 ) {
   await requireAdmin();
   const { id } = await props.params;
 
-  const galleryPhoto = await prisma.galleryPhoto.findUnique({
+  const album = await prisma.album.findUnique({
     where: { id },
-    include: { photo: true },
+    include: {
+      cover: true,
+      photos: { orderBy: { order: "asc" }, include: { photo: true } },
+    },
   });
-  if (!galleryPhoto) notFound();
+  if (!album) notFound();
 
   return (
     <div>
-      <h1 className="font-display text-h2 text-ink">Modifier la photo</h1>
+      <h1 className="font-display text-h2 text-ink">{album.title}</h1>
       <div className="mt-6 max-w-md">
-        <GalleryPhotoForm
+        <AlbumForm
           mode="edit"
-          action={updateGalleryPhoto.bind(null, id)}
-          galleryPhoto={{
-            id: galleryPhoto.id,
-            caption: galleryPhoto.caption,
-            photo: {
-              id: galleryPhoto.photo.id,
-              url: galleryPhoto.photo.url,
-              alt: galleryPhoto.photo.alt,
-            },
+          action={updateAlbum.bind(null, id)}
+          album={{
+            id: album.id,
+            title: album.title,
+            slug: album.slug,
+            description: album.description,
+            cover: album.cover
+              ? { id: album.cover.id, url: album.cover.url, alt: album.cover.alt }
+              : null,
           }}
+        />
+      </div>
+
+      <div className="mt-12 max-w-2xl border-t border-line pt-8">
+        <AlbumPhotosManager
+          albumId={album.id}
+          photos={album.photos.map((p) => ({
+            id: p.id,
+            caption: p.caption,
+            photo: { id: p.photo.id, url: p.photo.url, alt: p.photo.alt },
+          }))}
         />
       </div>
     </div>

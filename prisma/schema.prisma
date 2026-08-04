@@ -98,7 +98,7 @@ model Album {
 model GalleryPhoto {
   id      String  @id @default(cuid())
   photoId String
-  photo   Media   @relation("AlbumPhoto", fields: [photoId], references: [id])
+  photo   Media   @relation("AlbumPhoto", fields: [photoId], references: [id], onDelete: Cascade)
   albumId String
   album   Album   @relation(fields: [albumId], references: [id], onDelete: Cascade)
   caption String?

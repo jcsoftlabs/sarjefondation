@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
-import { createGalleryPhoto } from "@/lib/actions/gallery";
-import { GalleryPhotoForm } from "@/components/admin/GalleryPhotoForm";
+import { createAlbum } from "@/lib/actions/albums";
+import { AlbumForm } from "@/components/admin/AlbumForm";
 
-export const metadata: Metadata = { title: "Ajouter une photo", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Nouvel album", robots: { index: false, follow: false } };
 
-export default async function NewGalleryPhotoPage() {
+export default async function NewAlbumPage() {
   await requireAdmin();
   return (
     <div>
-      <h1 className="font-display text-h2 text-ink">Ajouter une photo</h1>
+      <h1 className="font-display text-h2 text-ink">Nouvel album</h1>
+      <p className="mt-2 text-sm text-muted">
+        Créez l&rsquo;album d&rsquo;abord, vous pourrez y ajouter des photos
+        juste après.
+      </p>
       <div className="mt-6 max-w-md">
-        <GalleryPhotoForm mode="create" action={createGalleryPhoto} />
+        <AlbumForm mode="create" action={createAlbum} />
       </div>
     </div>
   );

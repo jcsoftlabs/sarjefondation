@@ -15,13 +15,19 @@ export async function searchMedia(query?: string) {
 
 export async function getMediaUsage(id: string) {
   await requireAdmin();
-  const [articles, programs, teamMembers, testimonials] = await Promise.all([
-    prisma.article.findMany({ where: { coverId: id }, select: { id: true, title: true, slug: true } }),
-    prisma.program.findMany({ where: { coverId: id }, select: { id: true, title: true, slug: true } }),
-    prisma.teamMember.findMany({ where: { photoId: id }, select: { id: true, name: true } }),
-    prisma.testimonial.findMany({ where: { photoId: id }, select: { id: true, author: true } }),
-  ]);
-  return { articles, programs, teamMembers, testimonials };
+  const [articles, programs, teamMembers, testimonials, albumCovers, galleryPhotos] =
+    await Promise.all([
+      prisma.article.findMany({ where: { coverId: id }, select: { id: true, title: true, slug: true } }),
+      prisma.program.findMany({ where: { coverId: id }, select: { id: true, title: true, slug: true } }),
+      prisma.teamMember.findMany({ where: { photoId: id }, select: { id: true, name: true } }),
+      prisma.testimonial.findMany({ where: { photoId: id }, select: { id: true, author: true } }),
+      prisma.album.findMany({ where: { coverId: id }, select: { id: true, title: true, slug: true } }),
+      prisma.galleryPhoto.findMany({
+        where: { photoId: id },
+        select: { id: true, album: { select: { id: true, title: true, slug: true } } },
+      }),
+    ]);
+  return { articles, programs, teamMembers, testimonials, albumCovers, galleryPhotos };
 }
 
 export async function deleteMedia(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -32,7 +38,9 @@ export async function deleteMedia(id: string): Promise<{ ok: true } | { ok: fals
   }
 
   // Revalider les pages publiques qui affichaient cette image avant de la
-  // supprimer — la référence sera mise à NULL (ON DELETE SET NULL), mais le
+  // supprimer — la référence sera mise à NULL (ON DELETE SET NULL) ou, pour
+  // une photo de galerie, l'entrée sera retirée avec elle (ON DELETE
+  // CASCADE, une photo de galerie n'a pas de sens sans son image) — mais le
   // rendu déjà en cache doit être régénéré pour ne plus l'afficher.
   const usage = await getMediaUsage(id);
 
@@ -46,7 +54,7 @@ export async function deleteMedia(id: string): Promise<{ ok: true } | { ok: fals
   if (usage.teamMembers.length > 0) {
     revalidatePath("/la-fondation/equipe");
   }
-  if (usage.testimonials.length > 0) {
+  if (usage.testimonials.length > 0 || usage.albumCovers.length > 0 || usage.galleryPhotos.length > 0) {
     revalidatePath("/impact");
   }
   for (const article of usage.articles) {
@@ -56,6 +64,14 @@ export async function deleteMedia(id: string): Promise<{ ok: true } | { ok: fals
   for (const program of usage.programs) {
     revalidatePath("/programmes");
     revalidatePath(`/programmes/${program.slug}`);
+  }
+  for (const album of usage.albumCovers) {
+    revalidatePath(`/dashboard/galerie/${album.id}`);
+    revalidatePath(`/galerie/${album.slug}`);
+  }
+  for (const galleryPhoto of usage.galleryPhotos) {
+    revalidatePath(`/dashboard/galerie/${galleryPhoto.album.id}`);
+    revalidatePath(`/galerie/${galleryPhoto.album.slug}`);
   }
 
   return { ok: true };

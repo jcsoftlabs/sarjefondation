@@ -38,6 +38,10 @@ export function MediaDeleteButton({ id, alt }: { id: string; alt: string }) {
         ...usage.programs.map((p) => `Programme « ${p.title} »`),
         ...usage.teamMembers.map((m) => `Membre d'équipe « ${m.name} »`),
         ...usage.testimonials.map((t) => `Témoignage de « ${t.author} »`),
+        ...usage.albumCovers.map((a) => `Couverture de l'album « ${a.title} »`),
+        ...usage.galleryPhotos.map(
+          (g) => `Photo de l'album « ${g.album.title} » (sera retirée)`,
+        ),
       ]
     : [];
 

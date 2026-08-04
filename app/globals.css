@@ -1,26 +1,89 @@
 @import "tailwindcss";
 
+/*
+ * Tokens de la direction visuelle validée avec la fondation
+ * (voir la proposition de palette — rose fuchsia sur neutres roses).
+ * Toutes les couleurs, tailles de texte, espacements et rayons du site
+ * sont définis ici une seule fois et consommés via Tailwind.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Couleurs */
+  --color-ink: #22101d;
+  --color-muted: #6c5766;
+  --color-paper: #fbf6f9;
+  --color-line: #e9dee6;
+  --color-accent: #c4258a;
+  --color-accent-deep: #6e1259;
+  --color-accent-soft: #f7e6f0;
+  --color-error: #b3261e;
+  --color-error-bg: #fbeae8;
+  --color-success: #1e7a4c;
+  --color-success-bg: #e7f4ec;
+
+  /* Typographie */
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-public-sans);
+  --text-caption: 0.8125rem; /* 13px */
+  --text-body: 1rem; /* 16px */
+  --text-h3: 1.25rem; /* 20px */
+  --text-h2: 1.75rem; /* 28px */
+  --text-h1: 2.75rem; /* 44px */
+
+  /* Espacements — multiplicateur unique (base 4px), consommé par toutes les
+     utilitaires Tailwind (p-*, gap-*, m-*...) sans liste de paliers fixes. */
+  --space-unit: 0.25rem;
+
+  /* Rayons — discrets, pas d'arrondi prononcé */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-paper: var(--color-paper);
+  --color-line: var(--color-line);
+  --color-accent: var(--color-accent);
+  --color-accent-deep: var(--color-accent-deep);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-error: var(--color-error);
+  --color-error-bg: var(--color-error-bg);
+  --color-success: var(--color-success);
+  --color-success-bg: var(--color-success-bg);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  --text-caption: var(--text-caption);
+  --text-body: var(--text-body);
+  --text-h3: var(--text-h3);
+  --text-h2: var(--text-h2);
+  --text-h1: var(--text-h1);
+
+  --spacing: var(--space-unit);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-deep);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

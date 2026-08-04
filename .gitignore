@@ -43,3 +43,6 @@ next-env.d.ts
 
 /app/generated/prisma
 
+
+# manifeste du contenu de démonstration (npm run seed-demo-data / clear-demo-data)
+scripts/.demo-data-manifest.json

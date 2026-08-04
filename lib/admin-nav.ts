@@ -5,6 +5,7 @@ export const adminNav = [
   { href: "/dashboard/equipe", label: "Équipe" },
   { href: "/dashboard/temoignages", label: "Témoignages" },
   { href: "/dashboard/impact", label: "Chiffres d'impact" },
+  { href: "/dashboard/galerie", label: "Galerie" },
   { href: "/dashboard/medias", label: "Médias" },
   { href: "/dashboard/dons", label: "Dons" },
   { href: "/dashboard/parametres", label: "Paramètres" },

@@ -83,19 +83,28 @@ model ImpactStat {
   order Int    @default(0)
 }
 
+model GalleryPhoto {
+  id      String  @id @default(cuid())
+  photoId String
+  photo   Media   @relation(fields: [photoId], references: [id])
+  caption String?
+  order   Int     @default(0)
+}
+
 model Media {
-  id           String        @id @default(cuid())
-  url          String
-  alt          String // obligatoire
-  width        Int
-  height       Int
-  mimeType     String
-  sizeBytes    Int
-  createdAt    DateTime      @default(now())
-  articles     Article[]
-  programs     Program[]
-  teamMembers  TeamMember[]
-  testimonials Testimonial[]
+  id            String         @id @default(cuid())
+  url           String
+  alt           String // obligatoire
+  width         Int
+  height        Int
+  mimeType      String
+  sizeBytes     Int
+  createdAt     DateTime       @default(now())
+  articles      Article[]
+  programs      Program[]
+  teamMembers   TeamMember[]
+  testimonials  Testimonial[]
+  galleryPhotos GalleryPhoto[]
 }
 
 model Setting {

@@ -8,9 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ImpactPage() {
-  const [impactStats, testimonials] = await Promise.all([
+  const [impactStats, testimonials, galleryPhotos] = await Promise.all([
     prisma.impactStat.findMany({ orderBy: { order: "asc" } }),
     prisma.testimonial.findMany({ orderBy: { order: "asc" }, include: { photo: true } }),
+    prisma.galleryPhoto.findMany({ orderBy: { order: "asc" }, include: { photo: true } }),
   ]);
 
   return (
@@ -42,12 +43,43 @@ export default async function ImpactPage() {
       )}
 
       <div className="mt-16">
+        <h2 className="font-display text-h2 text-ink">Sur le terrain</h2>
+        {galleryPhotos.length === 0 ? (
+          <div className="mt-6 rounded-md border border-dashed border-line p-8 text-center">
+            <p className="text-body text-muted">
+              Galerie de terrain à venir, une fois les photos et
+              autorisations transmises par la fondation.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {galleryPhotos.map((item) => (
+              <figure key={item.id}>
+                <Image
+                  src={item.photo.url}
+                  alt={item.photo.alt}
+                  width={360}
+                  height={270}
+                  className="aspect-4/3 w-full rounded-md object-cover"
+                />
+                {item.caption && (
+                  <figcaption className="mt-1.5 text-xs text-muted">
+                    {item.caption}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-16">
         <h2 className="font-display text-h2 text-ink">Témoignages</h2>
         {testimonials.length === 0 ? (
           <div className="mt-6 rounded-md border border-dashed border-line p-8 text-center">
             <p className="text-body text-muted">
-              Témoignages et galerie de terrain à venir, une fois les photos et
-              autorisations transmises par la fondation.
+              Témoignages à venir, une fois les autorisations transmises par
+              la fondation.
             </p>
           </div>
         ) : (

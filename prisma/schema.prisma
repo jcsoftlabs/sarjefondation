@@ -103,6 +103,14 @@ model Setting {
   value Json
 }
 
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String // adresse IP normalisée
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, createdAt])
+}
+
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String

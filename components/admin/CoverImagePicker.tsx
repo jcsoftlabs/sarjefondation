@@ -7,8 +7,12 @@ import { ImageModal, type UploadedMedia } from "@/components/admin/ImageModal";
 
 export function CoverImagePicker({
   initialCover,
+  name = "coverId",
+  label = "Image de couverture",
 }: {
   initialCover?: { id: string; url: string; alt: string } | null;
+  name?: string;
+  label?: string;
 }) {
   const [cover, setCover] = useState<UploadedMedia | null>(
     initialCover
@@ -19,10 +23,8 @@ export function CoverImagePicker({
 
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium text-ink">
-        Image de couverture
-      </span>
-      <input type="hidden" name="coverId" value={cover?.id ?? ""} />
+      <span className="mb-1.5 block text-sm font-medium text-ink">{label}</span>
+      <input type="hidden" name={name} value={cover?.id ?? ""} />
 
       {cover ? (
         <div className="flex items-center gap-4">
@@ -55,7 +57,7 @@ export function CoverImagePicker({
       <ImageModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Image de couverture"
+        title={label}
         confirmLabel="Choisir"
         onConfirm={(media) => {
           setCover(media);

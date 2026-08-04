@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { loadStripe, type Stripe as StripeClient } from "@stripe/stripe-js";
 import {
   Elements,
@@ -74,10 +75,16 @@ export function DonationForm() {
   }
 
   return (
-    <AmountStep
-      errorMessage={step.name === "error" ? step.message : undefined}
-      onReady={(clientSecret) => setStep({ name: "payment", clientSecret })}
-    />
+    <Suspense fallback={
+      <Card>
+        <p className="text-sm text-muted">Chargement du formulaire de don...</p>
+      </Card>
+    }>
+      <AmountStep
+        errorMessage={step.name === "error" ? step.message : undefined}
+        onReady={(clientSecret) => setStep({ name: "payment", clientSecret })}
+      />
+    </Suspense>
   );
 }
 
@@ -88,8 +95,15 @@ function AmountStep({
   onReady: (clientSecret: string) => void;
   errorMessage?: string;
 }) {
-  const [amount, setAmount] = useState<number | null>(presetAmountsUsd[1]);
-  const [customAmount, setCustomAmount] = useState("");
+  const searchParams = useSearchParams();
+  const urlAmount = searchParams.get("amount");
+  
+  const initialAmount = urlAmount && !isNaN(Number(urlAmount)) 
+    ? Number(urlAmount) 
+    : presetAmountsUsd[1];
+
+  const [amount, setAmount] = useState<number | null>(presetAmountsUsd.includes(initialAmount) ? initialAmount : null);
+  const [customAmount, setCustomAmount] = useState(presetAmountsUsd.includes(initialAmount) ? "" : String(initialAmount));
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);

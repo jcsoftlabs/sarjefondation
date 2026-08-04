@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -9,73 +8,69 @@ import { galleryPhotoSchema } from "@/lib/validators/gallery";
 
 export type GalleryPhotoActionState = { ok: true } | { ok: false; error: string };
 
-function parseGalleryPhotoForm(formData: FormData) {
-  return galleryPhotoSchema.safeParse({
-    photoId: formData.get("photoId"),
-    caption: formData.get("caption") || null,
-  });
+async function revalidateAlbumPaths(albumId: string) {
+  const album = await prisma.album.findUnique({ where: { id: albumId } });
+  revalidatePath(`/dashboard/galerie/${albumId}`);
+  revalidatePath("/impact");
+  if (album) revalidatePath(`/galerie/${album.slug}`);
 }
 
-export async function createGalleryPhoto(
-  _prevState: GalleryPhotoActionState | null,
-  formData: FormData,
+export async function addGalleryPhoto(
+  albumId: string,
+  photoId: string,
+  caption: string,
 ): Promise<GalleryPhotoActionState> {
   const admin = await requireAdmin();
-  const parsed = parseGalleryPhotoForm(formData);
+  const parsed = galleryPhotoSchema.safeParse({ albumId, photoId, caption: caption || null });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
 
-  const last = await prisma.galleryPhoto.findFirst({ orderBy: { order: "desc" } });
+  const last = await prisma.galleryPhoto.findFirst({
+    where: { albumId },
+    orderBy: { order: "desc" },
+  });
   const photo = await prisma.galleryPhoto.create({
     data: { ...parsed.data, order: (last?.order ?? -1) + 1 },
   });
 
   await logAudit({ userId: admin.id, action: "CREATE", entity: "GalleryPhoto", entityId: photo.id });
-  revalidatePath("/dashboard/galerie");
-  revalidatePath("/impact");
-  redirect("/dashboard/galerie");
-}
-
-export async function updateGalleryPhoto(
-  id: string,
-  _prevState: GalleryPhotoActionState | null,
-  formData: FormData,
-): Promise<GalleryPhotoActionState> {
-  const admin = await requireAdmin();
-  const parsed = parseGalleryPhotoForm(formData);
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
-  }
-
-  const existing = await prisma.galleryPhoto.findUnique({ where: { id } });
-  if (!existing) {
-    return { ok: false, error: "Photo introuvable." };
-  }
-
-  await prisma.galleryPhoto.update({ where: { id }, data: parsed.data });
-  await logAudit({ userId: admin.id, action: "UPDATE", entity: "GalleryPhoto", entityId: id });
-  revalidatePath("/dashboard/galerie");
-  revalidatePath("/impact");
+  await revalidateAlbumPaths(albumId);
   return { ok: true };
 }
 
-export async function deleteGalleryPhoto(id: string): Promise<void> {
+export async function updateGalleryPhotoCaption(
+  photoId: string,
+  caption: string,
+): Promise<GalleryPhotoActionState> {
   const admin = await requireAdmin();
-  await prisma.galleryPhoto.delete({ where: { id } });
-  await logAudit({ userId: admin.id, action: "DELETE", entity: "GalleryPhoto", entityId: id });
-  revalidatePath("/dashboard/galerie");
-  revalidatePath("/impact");
-  redirect("/dashboard/galerie");
+  const photo = await prisma.galleryPhoto.update({
+    where: { id: photoId },
+    data: { caption: caption || null },
+  });
+
+  await logAudit({ userId: admin.id, action: "UPDATE", entity: "GalleryPhoto", entityId: photoId });
+  await revalidateAlbumPaths(photo.albumId);
+  return { ok: true };
 }
 
-export async function moveGalleryPhoto(id: string, direction: "up" | "down"): Promise<void> {
+export async function deleteGalleryPhoto(photoId: string): Promise<void> {
+  const admin = await requireAdmin();
+  const photo = await prisma.galleryPhoto.delete({ where: { id: photoId } });
+  await logAudit({ userId: admin.id, action: "DELETE", entity: "GalleryPhoto", entityId: photoId });
+  await revalidateAlbumPaths(photo.albumId);
+}
+
+export async function moveGalleryPhoto(photoId: string, direction: "up" | "down"): Promise<void> {
   await requireAdmin();
-  const current = await prisma.galleryPhoto.findUnique({ where: { id } });
+  const current = await prisma.galleryPhoto.findUnique({ where: { id: photoId } });
   if (!current) return;
 
   const neighbor = await prisma.galleryPhoto.findFirst({
-    where: direction === "up" ? { order: { lt: current.order } } : { order: { gt: current.order } },
+    where: {
+      albumId: current.albumId,
+      order: direction === "up" ? { lt: current.order } : { gt: current.order },
+    },
     orderBy: { order: direction === "up" ? "desc" : "asc" },
   });
   if (!neighbor) return;
@@ -85,6 +80,5 @@ export async function moveGalleryPhoto(id: string, direction: "up" | "down"): Pr
     prisma.galleryPhoto.update({ where: { id: neighbor.id }, data: { order: current.order } }),
   ]);
 
-  revalidatePath("/dashboard/galerie");
-  revalidatePath("/impact");
+  await revalidateAlbumPaths(current.albumId);
 }

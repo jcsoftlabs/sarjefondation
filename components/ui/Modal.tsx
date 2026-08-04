@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 
 type ModalProps = {
@@ -13,6 +14,19 @@ type ModalProps = {
 
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // Le portail ne peut rendre qu'après le montage côté client : le rendu
+  // serveur n'a pas de document.body, un rendu conditionnel sur
+  // typeof document produirait un écart d'hydratation.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Pattern standard de détection de montage client pour un portail :
+    // ce setState ne peut pas être évité, il n'y a pas d'autre signal que
+    // "l'effet a tourné" pour distinguer le premier rendu client du rendu
+    // serveur.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -24,7 +38,12 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     }
   }, [open]);
 
-  return (
+  if (!mounted) return null;
+
+  // Porté sur document.body : un <dialog> imbriqué dans un <form> (comme
+  // dans l'éditeur d'article) produirait sinon un <form> invalide dans un
+  // <form>.
+  return createPortal(
     <dialog
       ref={dialogRef}
       onClose={onClose}
@@ -46,6 +65,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         </button>
       </div>
       <div className="mt-4">{children}</div>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }

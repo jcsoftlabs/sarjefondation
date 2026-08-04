@@ -9,6 +9,17 @@ import { logAudit } from "@/lib/audit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) session.user.id = token.id as string;
+      return session;
+    },
+  },
   providers: [
     Credentials({
       credentials: {
@@ -49,3 +60,5 @@ export async function requireAdmin() {
   }
   return session.user;
 }
+
+export type AdminUser = Awaited<ReturnType<typeof requireAdmin>>;

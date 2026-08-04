@@ -24,8 +24,8 @@ export function Header() {
           <Image
             src="/logo-fondation.png"
             alt="Fondation Sarje"
-            width={40}
-            height={40}
+            width={56}
+            height={56}
             priority
           />
         </Link>

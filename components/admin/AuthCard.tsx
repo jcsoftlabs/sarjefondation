@@ -14,7 +14,7 @@ export function AuthCard({
     <div className="flex min-h-screen items-center justify-center bg-paper px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="flex justify-center">
-          <Image src="/logo-fondation.png" alt="Fondation Sarje" width={56} height={56} />
+          <Image src="/logo-fondation.png" alt="Fondation Sarje" width={96} height={96} />
         </div>
         <h1 className="mt-6 text-center font-display text-h2 text-ink">
           {title}

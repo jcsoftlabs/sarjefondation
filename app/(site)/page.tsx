@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
@@ -42,27 +43,43 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="border-b border-line bg-paper">
-        <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-24">
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-            Fondation Sarje
-          </p>
-          <h1 className="mt-3 max-w-2xl font-display text-h1 text-ink">
-            Chaque enfant accompagné aujourd&rsquo;hui construit l&rsquo;Haïti
-            de demain.
-          </h1>
-          <p className="mt-5 max-w-xl text-body text-muted">
-            La Fondation Sarje agit auprès des familles vulnérables à travers
-            des programmes d&rsquo;éducation, de santé et d&rsquo;accompagnement
-            communautaire, portés par des équipes présentes sur le terrain.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <ButtonLink href="/don" variant="primary">
-              Faire un don
-            </ButtonLink>
-            <ButtonLink href="/programmes" variant="secondary">
-              Découvrir les programmes
-            </ButtonLink>
+      <section className="relative overflow-hidden border-b border-line bg-paper">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24 lg:flex lg:items-center lg:gap-12">
+          <div className="relative z-10 mx-auto max-w-2xl lg:mx-0 lg:w-1/2 lg:max-w-xl">
+            <p className="inline-block rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent">
+              Fondation Sarje
+            </p>
+            <h1 className="mt-5 font-display text-h1 leading-tight text-ink">
+              Chaque enfant accompagné aujourd&rsquo;hui construit l&rsquo;Haïti
+              de demain.
+            </h1>
+            <p className="mt-5 max-w-xl text-body text-muted lg:text-lg">
+              La Fondation Sarje agit auprès des familles vulnérables à travers
+              des programmes d&rsquo;éducation, de santé et d&rsquo;accompagnement
+              communautaire, portés par des équipes présentes sur le terrain.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <ButtonLink href="/don" variant="primary" className="transition-transform hover:scale-105">
+                Faire un don
+              </ButtonLink>
+              <ButtonLink href="/programmes" variant="secondary" className="transition-transform hover:scale-105">
+                Découvrir les programmes
+              </ButtonLink>
+            </div>
+          </div>
+          
+          <div className="relative mt-12 lg:mt-0 lg:w-1/2">
+            <div className="relative aspect-video w-full overflow-hidden rounded-2xl shadow-xl lg:aspect-square lg:max-h-[600px]">
+              <Image
+                src="https://res.cloudinary.com/tdqpx8gd/image/upload/v1785882930/sarje-fondation/hero_haiti_education.jpg"
+                alt="Enfants haïtiens souriants en classe"
+                fill
+                className="object-cover transition-transform duration-700 hover:scale-105"
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 ring-1 ring-inset ring-ink/10 rounded-2xl pointer-events-none"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -95,8 +112,8 @@ export default async function HomePage() {
             </div>
             <div className="mt-8 grid gap-6 md:grid-cols-3">
               {featuredPrograms.map((program) => (
-                <Card key={program.slug} className="flex flex-col">
-                  <h3 className="font-display text-h3 text-ink">{program.title}</h3>
+                <Card key={program.slug} className="group flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                  <h3 className="font-display text-h3 text-ink group-hover:text-accent-deep transition-colors">{program.title}</h3>
                   <p className="mt-2 flex-1 text-sm text-muted">{program.summary}</p>
                   <Link
                     href={`/programmes/${program.slug}`}
@@ -137,12 +154,12 @@ export default async function HomePage() {
                 Toutes les actualités
               </Link>
             </div>
-            <Card className="mt-8">
+            <Card className="group mt-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
               <p className="text-xs text-muted">
                 {latestArticle.publishedAt &&
                   formatDate(latestArticle.publishedAt.toISOString())}
               </p>
-              <h3 className="mt-2 font-display text-h3 text-ink">
+              <h3 className="mt-2 font-display text-h3 text-ink group-hover:text-accent-deep transition-colors">
                 {latestArticle.title}
               </h3>
               <p className="mt-2 text-sm text-muted">{latestArticle.excerpt}</p>
@@ -167,7 +184,7 @@ export default async function HomePage() {
             adaptée à chacun.
           </p>
           <div className="mt-8 flex justify-center">
-            <ButtonLink href="/s-impliquer" variant="primary">
+            <ButtonLink href="/s-impliquer" variant="primary" className="transition-transform hover:scale-105">
               S&rsquo;impliquer
             </ButtonLink>
           </div>

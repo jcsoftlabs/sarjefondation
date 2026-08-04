@@ -43,11 +43,11 @@ export default async function ActualitesPage(
       ) : (
         <div className="mt-10 flex flex-col gap-6">
           {articles.map((article) => (
-            <Card key={article.slug}>
+            <Card key={article.slug} className="group transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
               <p className="text-xs text-muted">
                 {article.publishedAt && formatDate(article.publishedAt.toISOString())}
               </p>
-              <h2 className="mt-2 font-display text-h3 text-ink">
+              <h2 className="mt-2 font-display text-h3 text-ink group-hover:text-accent-deep transition-colors">
                 {article.title}
               </h2>
               <p className="mt-2 text-sm text-muted">{article.excerpt}</p>
@@ -70,7 +70,7 @@ export default async function ActualitesPage(
             className={
               page <= 1
                 ? "pointer-events-none text-sm text-muted opacity-40"
-                : "text-sm font-medium text-accent-deep hover:underline"
+                : "text-sm font-medium text-accent-deep hover:underline transition-transform hover:scale-105"
             }
           >
             Précédent
@@ -87,7 +87,7 @@ export default async function ActualitesPage(
             className={
               page >= totalPages
                 ? "pointer-events-none text-sm text-muted opacity-40"
-                : "text-sm font-medium text-accent-deep hover:underline"
+                : "text-sm font-medium text-accent-deep hover:underline transition-transform hover:scale-105"
             }
           >
             Suivant

@@ -33,8 +33,8 @@ export default async function ProgrammesPage() {
       ) : (
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {programs.map((program) => (
-            <Card key={program.slug} className="flex flex-col">
-              <h2 className="font-display text-h3 text-ink">{program.title}</h2>
+            <Card key={program.slug} className="group flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+              <h2 className="font-display text-h3 text-ink group-hover:text-accent-deep transition-colors">{program.title}</h2>
               <p className="mt-2 flex-1 text-sm text-muted">{program.summary}</p>
               <Link
                 href={`/programmes/${program.slug}`}

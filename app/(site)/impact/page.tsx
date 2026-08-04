@@ -33,10 +33,10 @@ export default async function ImpactPage() {
       ) : (
         <div className="mt-12 grid gap-8 sm:grid-cols-3">
           {impactStats.map((stat) => (
-            <div key={stat.id}>
-              <p className="font-display text-h1 text-ink">{stat.value}</p>
-              <div className="mt-3 mb-3 h-[3px] w-9 rounded-full bg-accent" />
-              <p className="text-sm text-muted">{stat.label}</p>
+            <div key={stat.id} className="rounded-xl border border-line bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+              <p className="font-display text-h1 text-accent-deep">{stat.value}</p>
+              <div className="mt-4 mb-3 h-[3px] w-12 rounded-full bg-accent" />
+              <p className="text-sm font-medium text-muted">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -87,10 +87,13 @@ export default async function ImpactPage() {
             {testimonials.map((testimonial) => (
               <blockquote
                 key={testimonial.id}
-                className="rounded-md border border-line p-6"
+                className="relative rounded-xl border border-line bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
-                <p className="text-body text-ink">&ldquo;{testimonial.quote}&rdquo;</p>
-                <footer className="mt-4 flex items-center gap-3">
+                <div className="absolute top-6 right-6 text-accent/10">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.714 4.103-9.609 9.983-9.609v3.391c-2.83 0-5.467 1.258-6.177 4.609h6.177v9h-9.983zm-14.017 0v-7.391c0-5.714 4.103-9.609 9.983-9.609v3.391c-2.83 0-5.467 1.258-6.177 4.609h6.177v9h-9.983z"/></svg>
+                </div>
+                <p className="relative z-10 text-body text-ink">&ldquo;{testimonial.quote}&rdquo;</p>
+                <footer className="relative z-10 mt-6 flex items-center gap-3 border-t border-line/50 pt-4">
                   {testimonial.photo ? (
                     <Image
                       src={testimonial.photo.url}

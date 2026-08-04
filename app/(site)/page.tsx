@@ -48,8 +48,8 @@ export default async function HomePage() {
             Fondation Sarje
           </p>
           <h1 className="mt-3 max-w-2xl font-display text-h1 text-ink">
-            Chaque enfant accompagné aujourd&rsquo;hui construit la Haïti de
-            demain.
+            Chaque enfant accompagné aujourd&rsquo;hui construit l&rsquo;Haïti
+            de demain.
           </h1>
           <p className="mt-5 max-w-xl text-body text-muted">
             La Fondation Sarje agit auprès des familles vulnérables à travers

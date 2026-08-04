@@ -1,19 +1,18 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Impact",
   description: "Les chiffres d'impact de la Fondation Sarje.",
 };
 
-// Chiffres provisoires — à remplacer par les chiffres réels de la fondation
-// (plan §10.5) avant la mise en ligne.
-const impactStats = [
-  { value: "1 240", label: "enfants accompagnés depuis la création de la fondation" },
-  { value: "4", label: "programmes actifs sur l'ensemble du territoire" },
-  { value: "96%", label: "des fonds directement affectés au terrain" },
-];
+export default async function ImpactPage() {
+  const [impactStats, testimonials] = await Promise.all([
+    prisma.impactStat.findMany({ orderBy: { order: "asc" } }),
+    prisma.testimonial.findMany({ orderBy: { order: "asc" }, include: { photo: true } }),
+  ]);
 
-export default function ImpactPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">
@@ -25,21 +24,65 @@ export default function ImpactPage() {
         fondation sur le terrain.
       </p>
 
-      <div className="mt-12 grid gap-8 sm:grid-cols-3">
-        {impactStats.map((stat) => (
-          <div key={stat.label}>
-            <p className="font-display text-h1 text-ink">{stat.value}</p>
-            <div className="mt-3 mb-3 h-[3px] w-9 rounded-full bg-accent" />
-            <p className="text-sm text-muted">{stat.label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-14 rounded-md border border-dashed border-line p-8 text-center">
-        <p className="text-body text-muted">
-          Témoignages et galerie de terrain à venir, une fois les photos et
-          autorisations transmises par la fondation.
+      {impactStats.length === 0 ? (
+        <p className="mt-12 text-body text-muted">
+          Les chiffres d&rsquo;impact de la fondation seront publiés ici
+          prochainement.
         </p>
+      ) : (
+        <div className="mt-12 grid gap-8 sm:grid-cols-3">
+          {impactStats.map((stat) => (
+            <div key={stat.id}>
+              <p className="font-display text-h1 text-ink">{stat.value}</p>
+              <div className="mt-3 mb-3 h-[3px] w-9 rounded-full bg-accent" />
+              <p className="text-sm text-muted">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-16">
+        <h2 className="font-display text-h2 text-ink">Témoignages</h2>
+        {testimonials.length === 0 ? (
+          <div className="mt-6 rounded-md border border-dashed border-line p-8 text-center">
+            <p className="text-body text-muted">
+              Témoignages et galerie de terrain à venir, une fois les photos et
+              autorisations transmises par la fondation.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+            {testimonials.map((testimonial) => (
+              <blockquote
+                key={testimonial.id}
+                className="rounded-md border border-line p-6"
+              >
+                <p className="text-body text-ink">&ldquo;{testimonial.quote}&rdquo;</p>
+                <footer className="mt-4 flex items-center gap-3">
+                  {testimonial.photo ? (
+                    <Image
+                      src={testimonial.photo.url}
+                      alt={testimonial.photo.alt}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full border border-line object-cover"
+                    />
+                  ) : (
+                    <span className="h-10 w-10 rounded-full border border-line bg-line/30" />
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-ink">
+                      {testimonial.author}
+                    </p>
+                    {testimonial.role && (
+                      <p className="text-xs text-muted">{testimonial.role}</p>
+                    )}
+                  </div>
+                </footer>
+              </blockquote>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

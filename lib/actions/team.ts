@@ -35,6 +35,7 @@ export async function createTeamMember(
 
   await logAudit({ userId: admin.id, action: "CREATE", entity: "TeamMember", entityId: member.id });
   revalidatePath("/dashboard/equipe");
+  revalidatePath("/la-fondation/equipe");
   redirect(`/dashboard/equipe/${member.id}`);
 }
 
@@ -58,6 +59,7 @@ export async function updateTeamMember(
   await logAudit({ userId: admin.id, action: "UPDATE", entity: "TeamMember", entityId: id });
   revalidatePath("/dashboard/equipe");
   revalidatePath(`/dashboard/equipe/${id}`);
+  revalidatePath("/la-fondation/equipe");
   return { ok: true };
 }
 
@@ -66,6 +68,7 @@ export async function deleteTeamMember(id: string): Promise<void> {
   await prisma.teamMember.delete({ where: { id } });
   await logAudit({ userId: admin.id, action: "DELETE", entity: "TeamMember", entityId: id });
   revalidatePath("/dashboard/equipe");
+  revalidatePath("/la-fondation/equipe");
   redirect("/dashboard/equipe");
 }
 
@@ -86,4 +89,5 @@ export async function moveTeamMember(id: string, direction: "up" | "down"): Prom
   ]);
 
   revalidatePath("/dashboard/equipe");
+  revalidatePath("/la-fondation/equipe");
 }

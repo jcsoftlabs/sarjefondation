@@ -66,6 +66,9 @@ export async function createProgram(
   await logAudit({ userId: admin.id, action: "CREATE", entity: "Program", entityId: program.id });
 
   revalidatePath("/dashboard/programmes");
+  revalidatePath("/");
+  revalidatePath("/programmes");
+  revalidatePath(`/programmes/${program.slug}`);
   redirect(`/dashboard/programmes/${program.id}`);
 }
 
@@ -110,14 +113,23 @@ export async function updateProgram(
 
   revalidatePath("/dashboard/programmes");
   revalidatePath(`/dashboard/programmes/${id}`);
+  revalidatePath("/");
+  revalidatePath("/programmes");
+  revalidatePath(`/programmes/${existing.slug}`);
+  if (parsed.data.slug !== existing.slug) {
+    revalidatePath(`/programmes/${parsed.data.slug}`);
+  }
   return { ok: true };
 }
 
 export async function deleteProgram(id: string): Promise<void> {
   const admin = await requireAdmin();
-  await prisma.program.delete({ where: { id } });
+  const program = await prisma.program.delete({ where: { id } });
   await logAudit({ userId: admin.id, action: "DELETE", entity: "Program", entityId: id });
   revalidatePath("/dashboard/programmes");
+  revalidatePath("/");
+  revalidatePath("/programmes");
+  revalidatePath(`/programmes/${program.slug}`);
   redirect("/dashboard/programmes");
 }
 
@@ -138,4 +150,6 @@ export async function moveProgram(id: string, direction: "up" | "down"): Promise
   ]);
 
   revalidatePath("/dashboard/programmes");
+  revalidatePath("/");
+  revalidatePath("/programmes");
 }

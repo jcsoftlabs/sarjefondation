@@ -33,6 +33,8 @@ export async function createImpactStat(
 
   await logAudit({ userId: admin.id, action: "CREATE", entity: "ImpactStat", entityId: stat.id });
   revalidatePath("/dashboard/impact");
+  revalidatePath("/");
+  revalidatePath("/impact");
   redirect(`/dashboard/impact/${stat.id}`);
 }
 
@@ -56,6 +58,8 @@ export async function updateImpactStat(
   await logAudit({ userId: admin.id, action: "UPDATE", entity: "ImpactStat", entityId: id });
   revalidatePath("/dashboard/impact");
   revalidatePath(`/dashboard/impact/${id}`);
+  revalidatePath("/");
+  revalidatePath("/impact");
   return { ok: true };
 }
 
@@ -64,6 +68,8 @@ export async function deleteImpactStat(id: string): Promise<void> {
   await prisma.impactStat.delete({ where: { id } });
   await logAudit({ userId: admin.id, action: "DELETE", entity: "ImpactStat", entityId: id });
   revalidatePath("/dashboard/impact");
+  revalidatePath("/");
+  revalidatePath("/impact");
   redirect("/dashboard/impact");
 }
 
@@ -84,4 +90,6 @@ export async function moveImpactStat(id: string, direction: "up" | "down"): Prom
   ]);
 
   revalidatePath("/dashboard/impact");
+  revalidatePath("/");
+  revalidatePath("/impact");
 }

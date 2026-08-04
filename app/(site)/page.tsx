@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
-import { programs } from "@/lib/content/programs";
-import { articles } from "@/lib/content/articles";
+import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format-date";
 
 export const metadata: Metadata = {
@@ -11,12 +10,6 @@ export const metadata: Metadata = {
   description:
     "La Fondation Sarje agit auprès des familles vulnérables en Haïti à travers des programmes d'éducation, de santé et d'accompagnement communautaire.",
 };
-
-const impactStats = [
-  { value: "1 240", label: "enfants accompagnés depuis la création de la fondation" },
-  { value: "4", label: "programmes actifs sur l'ensemble du territoire" },
-  { value: "96%", label: "des fonds directement affectés au terrain" },
-];
 
 const values = [
   {
@@ -33,9 +26,19 @@ const values = [
   },
 ];
 
-export default function HomePage() {
-  const featuredPrograms = programs.slice(0, 3);
-  const latestArticle = articles[0];
+export default async function HomePage() {
+  const [impactStats, featuredPrograms, latestArticle] = await Promise.all([
+    prisma.impactStat.findMany({ orderBy: { order: "asc" } }),
+    prisma.program.findMany({
+      where: { isActive: true },
+      orderBy: { order: "asc" },
+      take: 3,
+    }),
+    prisma.article.findFirst({
+      where: { status: "PUBLISHED" },
+      orderBy: { publishedAt: "desc" },
+    }),
+  ]);
 
   return (
     <div>
@@ -64,45 +67,49 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-line">
-        <div className="mx-auto grid max-w-5xl gap-8 px-4 py-14 sm:grid-cols-3 md:px-6">
-          {impactStats.map((stat) => (
-            <div key={stat.label}>
-              <p className="font-display text-h1 text-ink">{stat.value}</p>
-              <div className="mt-3 mb-3 h-[3px] w-9 rounded-full bg-accent" />
-              <p className="text-sm text-muted">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-5xl px-4 py-14 md:px-6">
-          <div className="flex items-baseline justify-between gap-4">
-            <h2 className="font-display text-h2 text-ink">Nos programmes</h2>
-            <Link
-              href="/programmes"
-              className="text-sm font-medium text-accent-deep hover:underline"
-            >
-              Tous les programmes
-            </Link>
-          </div>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {featuredPrograms.map((program) => (
-              <Card key={program.slug} className="flex flex-col">
-                <h3 className="font-display text-h3 text-ink">{program.title}</h3>
-                <p className="mt-2 flex-1 text-sm text-muted">{program.summary}</p>
-                <Link
-                  href={`/programmes/${program.slug}`}
-                  className="mt-4 text-sm font-medium text-accent-deep hover:underline"
-                >
-                  En savoir plus
-                </Link>
-              </Card>
+      {impactStats.length > 0 && (
+        <section className="border-b border-line">
+          <div className="mx-auto grid max-w-5xl gap-8 px-4 py-14 sm:grid-cols-3 md:px-6">
+            {impactStats.map((stat) => (
+              <div key={stat.id}>
+                <p className="font-display text-h1 text-ink">{stat.value}</p>
+                <div className="mt-3 mb-3 h-[3px] w-9 rounded-full bg-accent" />
+                <p className="text-sm text-muted">{stat.label}</p>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {featuredPrograms.length > 0 && (
+        <section className="border-b border-line">
+          <div className="mx-auto max-w-5xl px-4 py-14 md:px-6">
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="font-display text-h2 text-ink">Nos programmes</h2>
+              <Link
+                href="/programmes"
+                className="text-sm font-medium text-accent-deep hover:underline"
+              >
+                Tous les programmes
+              </Link>
+            </div>
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+              {featuredPrograms.map((program) => (
+                <Card key={program.slug} className="flex flex-col">
+                  <h3 className="font-display text-h3 text-ink">{program.title}</h3>
+                  <p className="mt-2 flex-1 text-sm text-muted">{program.summary}</p>
+                  <Link
+                    href={`/programmes/${program.slug}`}
+                    className="mt-4 text-sm font-medium text-accent-deep hover:underline"
+                  >
+                    En savoir plus
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="border-b border-line">
         <div className="mx-auto max-w-5xl px-4 py-14 md:px-6">
@@ -132,7 +139,8 @@ export default function HomePage() {
             </div>
             <Card className="mt-8">
               <p className="text-xs text-muted">
-                {formatDate(latestArticle.publishedAt)}
+                {latestArticle.publishedAt &&
+                  formatDate(latestArticle.publishedAt.toISOString())}
               </p>
               <h3 className="mt-2 font-display text-h3 text-ink">
                 {latestArticle.title}

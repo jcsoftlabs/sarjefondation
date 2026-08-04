@@ -40,6 +40,7 @@ export async function createTestimonial(
     entityId: testimonial.id,
   });
   revalidatePath("/dashboard/temoignages");
+  revalidatePath("/impact");
   redirect(`/dashboard/temoignages/${testimonial.id}`);
 }
 
@@ -63,6 +64,7 @@ export async function updateTestimonial(
   await logAudit({ userId: admin.id, action: "UPDATE", entity: "Testimonial", entityId: id });
   revalidatePath("/dashboard/temoignages");
   revalidatePath(`/dashboard/temoignages/${id}`);
+  revalidatePath("/impact");
   return { ok: true };
 }
 
@@ -71,6 +73,7 @@ export async function deleteTestimonial(id: string): Promise<void> {
   await prisma.testimonial.delete({ where: { id } });
   await logAudit({ userId: admin.id, action: "DELETE", entity: "Testimonial", entityId: id });
   revalidatePath("/dashboard/temoignages");
+  revalidatePath("/impact");
   redirect("/dashboard/temoignages");
 }
 
@@ -91,4 +94,5 @@ export async function moveTestimonial(id: string, direction: "up" | "down"): Pro
   ]);
 
   revalidatePath("/dashboard/temoignages");
+  revalidatePath("/impact");
 }

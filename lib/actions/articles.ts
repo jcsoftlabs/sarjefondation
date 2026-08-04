@@ -103,6 +103,9 @@ export async function createArticle(
   }
 
   revalidatePath("/dashboard/articles");
+  revalidatePath("/");
+  revalidatePath("/actualites");
+  revalidatePath(`/actualites/${article.slug}`);
   redirect(`/dashboard/articles/${article.id}`);
 }
 
@@ -169,12 +172,18 @@ export async function updateArticle(
 
   revalidatePath("/dashboard/articles");
   revalidatePath(`/dashboard/articles/${id}`);
+  revalidatePath("/");
+  revalidatePath("/actualites");
+  revalidatePath(`/actualites/${existingArticle.slug}`);
+  if (parsed.data.slug !== existingArticle.slug) {
+    revalidatePath(`/actualites/${parsed.data.slug}`);
+  }
   return { ok: true };
 }
 
 export async function deleteArticle(id: string): Promise<void> {
   const admin = await requireAdmin();
-  await prisma.article.delete({ where: { id } });
+  const article = await prisma.article.delete({ where: { id } });
   await logAudit({
     userId: admin.id,
     action: "DELETE",
@@ -182,5 +191,8 @@ export async function deleteArticle(id: string): Promise<void> {
     entityId: id,
   });
   revalidatePath("/dashboard/articles");
+  revalidatePath("/");
+  revalidatePath("/actualites");
+  revalidatePath(`/actualites/${article.slug}`);
   redirect("/dashboard/articles");
 }

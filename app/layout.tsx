@@ -15,7 +15,10 @@ const publicSans = Public_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Fondation Sarje",
+  title: {
+    template: "%s — Fondation Sarje",
+    default: "Fondation Sarje",
+  },
   description: "Fondation Sarje — programmes, actualités et engagement.",
 };
 

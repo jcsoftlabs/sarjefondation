@@ -6,7 +6,7 @@ import Image from "@tiptap/extension-image";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { LinkModal } from "@/components/admin/LinkModal";
-import { ImageModal } from "@/components/admin/ImageModal";
+import { MediaPicker } from "@/components/admin/MediaPicker";
 
 type ToolbarButtonProps = {
   onClick: () => void;
@@ -140,9 +140,11 @@ export function TiptapEditor({
           setLinkModalOpen(false);
         }}
       />
-      <ImageModal
+      <MediaPicker
         open={imageModalOpen}
         onClose={() => setImageModalOpen(false)}
+        title="Insérer une image"
+        confirmLabel="Insérer"
         onConfirm={({ url, alt }) => {
           editor.chain().focus().setImage({ src: url, alt }).run();
           setImageModalOpen(false);

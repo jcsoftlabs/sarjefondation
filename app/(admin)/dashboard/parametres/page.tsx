@@ -1,10 +1,22 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
-import { ComingSoon } from "@/components/admin/ComingSoon";
+import { getSettings } from "@/lib/actions/settings";
+import { SettingsForm } from "@/components/admin/SettingsForm";
+import { ChangePasswordForm } from "@/components/admin/ChangePasswordForm";
 
 export const metadata: Metadata = { title: "Paramètres", robots: { index: false, follow: false } };
 
 export default async function ParametresAdminPage() {
   await requireAdmin();
-  return <ComingSoon title="Paramètres" phase="la phase 6" />;
+  const settings = await getSettings();
+
+  return (
+    <div className="max-w-2xl">
+      <h1 className="font-display text-h2 text-ink">Paramètres</h1>
+      <div className="mt-6 flex flex-col gap-6">
+        <SettingsForm settings={settings} />
+        <ChangePasswordForm />
+      </div>
+    </div>
+  );
 }

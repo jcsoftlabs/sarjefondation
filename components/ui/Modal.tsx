@@ -10,9 +10,15 @@ type ModalProps = {
   title: string;
   children: ReactNode;
   className?: string;
+  size?: "md" | "lg";
 };
 
-export function Modal({ open, onClose, title, children, className }: ModalProps) {
+const sizeClasses = {
+  md: "max-w-md",
+  lg: "max-w-2xl",
+};
+
+export function Modal({ open, onClose, title, children, className, size = "md" }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   // Le portail ne peut rendre qu'après le montage côté client : le rendu
   // serveur n'a pas de document.body, un rendu conditionnel sur
@@ -49,7 +55,8 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       onClose={onClose}
       onCancel={onClose}
       className={cn(
-        "w-full max-w-md rounded-md border border-line bg-paper p-6 text-ink backdrop:bg-ink/40",
+        "w-full rounded-md border border-line bg-paper p-6 text-ink backdrop:bg-ink/40",
+        sizeClasses[size],
         className,
       )}
     >

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
-import { ImageModal, type UploadedMedia } from "@/components/admin/ImageModal";
+import { MediaPicker, type UploadedMedia } from "@/components/admin/MediaPicker";
 
 export function CoverImagePicker({
   initialCover,
@@ -54,7 +54,7 @@ export function CoverImagePicker({
         </Button>
       )}
 
-      <ImageModal
+      <MediaPicker
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={label}

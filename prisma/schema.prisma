@@ -83,10 +83,24 @@ model ImpactStat {
   order Int    @default(0)
 }
 
+model Album {
+  id          String         @id @default(cuid())
+  title       String
+  slug        String         @unique
+  description String?
+  coverId     String?
+  cover       Media?         @relation("AlbumCover", fields: [coverId], references: [id])
+  order       Int            @default(0)
+  createdAt   DateTime       @default(now())
+  photos      GalleryPhoto[]
+}
+
 model GalleryPhoto {
   id      String  @id @default(cuid())
   photoId String
-  photo   Media   @relation(fields: [photoId], references: [id])
+  photo   Media   @relation("AlbumPhoto", fields: [photoId], references: [id])
+  albumId String
+  album   Album   @relation(fields: [albumId], references: [id], onDelete: Cascade)
   caption String?
   order   Int     @default(0)
 }
@@ -104,7 +118,8 @@ model Media {
   programs      Program[]
   teamMembers   TeamMember[]
   testimonials  Testimonial[]
-  galleryPhotos GalleryPhoto[]
+  galleryPhotos GalleryPhoto[] @relation("AlbumPhoto")
+  albumCovers   Album[]        @relation("AlbumCover")
 }
 
 model Setting {

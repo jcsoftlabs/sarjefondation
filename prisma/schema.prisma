@@ -1,0 +1,119 @@
+// Schéma de référence : PLAN-IMPLEMENTATION-sarjefondation.md §5
+// Prisma Client généré dans app/generated/prisma (non versionné, régénéré à chaque install).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String               @id @default(cuid())
+  email        String               @unique
+  passwordHash String
+  name         String
+  lastLoginAt  DateTime?
+  createdAt    DateTime             @default(now())
+  resetTokens  PasswordResetToken[]
+  auditLogs    AuditLog[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+model Article {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  content     Json // document Tiptap
+  coverId     String?
+  cover       Media?    @relation(fields: [coverId], references: [id])
+  status      Status    @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Program {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  title    String
+  summary  String
+  content  Json
+  coverId  String?
+  cover    Media?  @relation(fields: [coverId], references: [id])
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+}
+
+model TeamMember {
+  id      String  @id @default(cuid())
+  name    String
+  role    String
+  bio     String?
+  photoId String?
+  photo   Media?  @relation(fields: [photoId], references: [id])
+  order   Int     @default(0)
+}
+
+model Testimonial {
+  id      String  @id @default(cuid())
+  author  String
+  role    String?
+  quote   String
+  photoId String?
+  photo   Media?  @relation(fields: [photoId], references: [id])
+  order   Int     @default(0)
+}
+
+model ImpactStat {
+  id    String @id @default(cuid())
+  label String
+  value String
+  order Int    @default(0)
+}
+
+model Media {
+  id           String        @id @default(cuid())
+  url          String
+  alt          String // obligatoire
+  width        Int
+  height       Int
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime      @default(now())
+  articles     Article[]
+  programs     Program[]
+  teamMembers  TeamMember[]
+  testimonials Testimonial[]
+}
+
+model Setting {
+  key   String @id
+  value Json
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String // CREATE | UPDATE | DELETE | PUBLISH | LOGIN
+  entity    String
+  entityId  String?
+  createdAt DateTime @default(now())
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+}

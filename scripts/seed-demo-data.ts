@@ -14,19 +14,62 @@ const IMAGE_DIR =
   "/private/tmp/claude-501/-Users-christopherjerome-Jedco/d51fd610-c00d-44eb-984b-18d71b7b2721/scratchpad/demo-images";
 const MANIFEST_PATH = path.join(__dirname, ".demo-data-manifest.json");
 
+// Le dossier scratchpad (temporaire, propre à une session) peut avoir été
+// vidé entre deux exécutions. Dans ce cas, on réutilise les images déjà
+// envoyées sur Cloudinary lors d'exécutions précédentes (dossier
+// sarje-fondation/demo) plutôt que d'échouer — un contenu de démonstration
+// n'a pas besoin de correspondre exactement à son alt, seulement d'exister.
+let fallbackPool: { secure_url: string; width: number; height: number; bytes: number }[] | null =
+  null;
+let fallbackIndex = 0;
+
+async function getFallbackImage() {
+  if (fallbackPool === null) {
+    const result = await cloudinary.api.resources({
+      type: "upload",
+      prefix: "sarje-fondation/demo",
+      max_results: 100,
+    });
+    fallbackPool = result.resources;
+    if (!fallbackPool || fallbackPool.length === 0) {
+      throw new Error(
+        `Aucune image locale dans ${IMAGE_DIR} et aucune image de secours sur Cloudinary (dossier sarje-fondation/demo vide).`,
+      );
+    }
+  }
+  const image = fallbackPool[fallbackIndex % fallbackPool.length];
+  fallbackIndex += 1;
+  return image;
+}
+
 async function uploadImage(filename: string, alt: string) {
   const filePath = path.join(IMAGE_DIR, filename);
-  const result = await cloudinary.uploader.upload(filePath, {
-    folder: "sarje-fondation/demo",
-  });
+
+  if (fs.existsSync(filePath)) {
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: "sarje-fondation/demo",
+    });
+    return prisma.media.create({
+      data: {
+        url: result.secure_url,
+        alt,
+        width: result.width,
+        height: result.height,
+        mimeType: "image/png",
+        sizeBytes: result.bytes,
+      },
+    });
+  }
+
+  const fallback = await getFallbackImage();
   return prisma.media.create({
     data: {
-      url: result.secure_url,
+      url: fallback.secure_url,
       alt,
-      width: result.width,
-      height: result.height,
+      width: fallback.width,
+      height: fallback.height,
       mimeType: "image/png",
-      sizeBytes: result.bytes,
+      sizeBytes: fallback.bytes,
     },
   });
 }
@@ -75,9 +118,12 @@ async function main() {
     prisma.program.create({
       data: {
         title: "Éducation",
+        titleEn: "Education",
         slug: "education",
         summary:
           "Frais de scolarité, fournitures et accompagnement pédagogique pour des enfants qui, sans ce soutien, n'auraient pas accès à l'école.",
+        summaryEn:
+          "Tuition fees, school supplies, and academic support for children who, without this help, would not have access to school.",
         content: {
           type: "doc",
           content: [
@@ -92,6 +138,20 @@ async function main() {
             },
           ],
         },
+        contentEn: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "The Education program covers schooling for children from vulnerable families, from kindergarten through high school.",
+                },
+              ],
+            },
+          ],
+        },
         coverId: covers.education.id,
         order: 0,
         isActive: true,
@@ -100,9 +160,12 @@ async function main() {
     prisma.program.create({
       data: {
         title: "Santé",
+        titleEn: "Health",
         slug: "sante",
         summary:
           "Consultations médicales, vaccination et suivi nutritionnel pour les enfants et leurs familles dans les zones les moins desservies.",
+        summaryEn:
+          "Medical consultations, vaccination, and nutritional follow-up for children and their families in the least-served areas.",
         content: {
           type: "doc",
           content: [
@@ -112,6 +175,20 @@ async function main() {
                 {
                   type: "text",
                   text: "Le programme Santé organise des cliniques mobiles dans les communautés éloignées des centres de soins.",
+                },
+              ],
+            },
+          ],
+        },
+        contentEn: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "The Health program runs mobile clinics in communities far from healthcare centers.",
                 },
               ],
             },
@@ -180,9 +257,12 @@ async function main() {
     prisma.article.create({
       data: {
         title: "180 enfants supplémentaires accompagnés à la rentrée",
+        titleEn: "180 more children supported this school year",
         slug: "rentree-scolaire-2026",
         excerpt:
           "Le programme Éducation s'élargit à trois nouvelles communautés pour cette rentrée scolaire.",
+        excerptEn:
+          "The Education program is expanding to three new communities this school year.",
         content: {
           type: "doc",
           content: [
@@ -192,6 +272,20 @@ async function main() {
                 {
                   type: "text",
                   text: "Grâce au soutien de nos partenaires, le programme Éducation accompagne cette année 180 enfants supplémentaires dans trois communautés qui n'étaient pas encore couvertes.",
+                },
+              ],
+            },
+          ],
+        },
+        contentEn: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "Thanks to the support of our partners, the Education program is supporting 180 more children this year in three communities that were not previously covered.",
                 },
               ],
             },
@@ -261,7 +355,9 @@ async function main() {
       data: {
         name: "Nadège Pierre",
         role: "Directrice générale",
+        roleEn: "Executive Director",
         bio: "Pilote l'ensemble des programmes de la fondation depuis sa création.",
+        bioEn: "Leads all of the foundation's programs since its founding.",
         photoId: covers.membre1.id,
         order: 0,
       },
@@ -293,8 +389,11 @@ async function main() {
       data: {
         author: "Marie-Ange",
         role: "Mère de deux enfants accompagnés",
+        roleEn: "Mother of two supported children",
         quote:
           "Grâce au programme Éducation, mes enfants sont retournés à l'école. Je ne pensais pas que ce serait possible cette année.",
+        quoteEn:
+          "Thanks to the Education program, my children are back in school. I didn't think that would be possible this year.",
         photoId: covers.temoin1.id,
         order: 0,
       },
@@ -315,7 +414,12 @@ async function main() {
   console.log("Création des chiffres d'impact…");
   const impactStats = await Promise.all([
     prisma.impactStat.create({
-      data: { value: "1 240", label: "enfants accompagnés depuis la création de la fondation", order: 0 },
+      data: {
+        value: "1 240",
+        label: "enfants accompagnés depuis la création de la fondation",
+        labelEn: "children supported since the foundation was created",
+        order: 0,
+      },
     }),
     prisma.impactStat.create({
       data: { value: "4", label: "programmes actifs sur l'ensemble du territoire", order: 1 },
@@ -329,18 +433,26 @@ async function main() {
   console.log("Création des albums…");
   const albumsData: {
     title: string;
+    titleEn?: string;
     slug: string;
     description: string;
+    descriptionEn?: string;
     coverKey: keyof typeof covers;
-    photos: [keyof typeof covers, string][];
+    photos: [keyof typeof covers, string, string?][];
   }[] = [
     {
       title: "Programme Éducation",
+      titleEn: "Education Program",
       slug: "programme-education",
       description: "Le programme Éducation sur le terrain, au fil des tournées.",
+      descriptionEn: "The Education program on the ground, across our field visits.",
       coverKey: "galerie1",
       photos: [
-        ["galerie1", "Cours de soutien scolaire, communauté de Cabaret"],
+        [
+          "galerie1",
+          "Cours de soutien scolaire, communauté de Cabaret",
+          "Tutoring session, Cabaret community",
+        ],
         ["galerie2", "Consultation lors d'une tournée de la clinique mobile"],
       ],
     },
@@ -362,8 +474,10 @@ async function main() {
     const album = await prisma.album.create({
       data: {
         title: albumData.title,
+        titleEn: albumData.titleEn,
         slug: albumData.slug,
         description: albumData.description,
+        descriptionEn: albumData.descriptionEn,
         coverId: covers[albumData.coverKey].id,
         order: index,
       },
@@ -371,12 +485,13 @@ async function main() {
     manifest.albums.push(album.id);
 
     const photos = await Promise.all(
-      albumData.photos.map(([key, caption], photoIndex) =>
+      albumData.photos.map(([key, caption, captionEn], photoIndex) =>
         prisma.galleryPhoto.create({
           data: {
             albumId: album.id,
             photoId: covers[key].id,
             caption,
+            captionEn,
             order: photoIndex,
           },
         }),

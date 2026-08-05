@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 export function DonationBanner() {
+  const t = useTranslations("DonationBanner");
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -28,10 +30,10 @@ export function DonationBanner() {
         {/* Left Section */}
         <div className="flex-1 shrink-0 text-center md:text-left">
           <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">
-            JE SOUTIENS
+            {t("jeSoutiens")}
           </p>
           <p className="font-display text-base font-bold leading-tight sm:text-lg uppercase">
-            LA FONDATION SARJE
+            {t("nomFondation")}
           </p>
         </div>
 
@@ -41,15 +43,15 @@ export function DonationBanner() {
             href="/don"
             className="whitespace-nowrap bg-accent-deep px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-white hover:text-accent"
           >
-            FAIRE UN DON
+            {t("faireUnDon")}
           </Link>
-          
+
           <div className="hidden h-10 w-px bg-white/30 md:block" />
 
           {/* Right Section */}
           <div className="flex flex-col items-center gap-2 sm:items-start">
             <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">
-              JE FAIS UN DON
+              {t("jeFaisUnDon")}
             </p>
             <div className="flex flex-wrap justify-center gap-2 border-t border-white/30 pt-2 sm:border-none sm:pt-0">
               {amounts.map((amount) => (
@@ -69,7 +71,7 @@ export function DonationBanner() {
         <button
           onClick={handleClose}
           className="absolute right-2 top-2 p-2 text-white/80 transition-transform hover:scale-110 hover:text-white md:static md:p-0"
-          aria-label="Fermer le bandeau de don"
+          aria-label={t("fermer")}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"></circle>

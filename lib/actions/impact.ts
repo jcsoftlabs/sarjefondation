@@ -12,6 +12,7 @@ export type ImpactStatActionState = { ok: true } | { ok: false; error: string };
 function parseImpactStatForm(formData: FormData) {
   return impactStatSchema.safeParse({
     label: formData.get("label"),
+    labelEn: formData.get("labelEn") || null,
     value: formData.get("value"),
   });
 }

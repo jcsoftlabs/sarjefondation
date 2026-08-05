@@ -27,9 +27,12 @@ export default async function EditProgramPage(
           program={{
             id: program.id,
             title: program.title,
+            titleEn: program.titleEn,
             slug: program.slug,
             summary: program.summary,
+            summaryEn: program.summaryEn,
             content: program.content as JSONContent,
+            contentEn: program.contentEn as JSONContent | null,
             isActive: program.isActive,
             cover: program.cover
               ? { id: program.cover.id, url: program.cover.url, alt: program.cover.alt }

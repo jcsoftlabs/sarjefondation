@@ -27,7 +27,9 @@ export default async function EditTeamMemberPage(
             id: member.id,
             name: member.name,
             role: member.role,
+            roleEn: member.roleEn,
             bio: member.bio,
+            bioEn: member.bioEn,
             photo: member.photo
               ? { id: member.photo.id, url: member.photo.url, alt: member.photo.alt }
               : null,

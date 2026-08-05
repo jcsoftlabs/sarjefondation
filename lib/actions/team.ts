@@ -13,7 +13,9 @@ function parseTeamMemberForm(formData: FormData) {
   return teamMemberSchema.safeParse({
     name: formData.get("name"),
     role: formData.get("role"),
+    roleEn: formData.get("roleEn") || null,
     bio: formData.get("bio") || null,
+    bioEn: formData.get("bioEn") || null,
     photoId: formData.get("photoId") || null,
   });
 }

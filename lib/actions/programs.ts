@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { programSchema } from "@/lib/validators/programs";
 import { Prisma } from "@/app/generated/prisma/client";
+import { isEmptyTiptapDoc } from "@/lib/tiptap-empty";
 
 export type ProgramActionState =
   | { ok: true }
@@ -19,12 +20,25 @@ function parseProgramForm(formData: FormData) {
   } catch {
     content = {};
   }
+  let contentEn: unknown = null;
+  const contentEnRaw = formData.get("contentEn");
+  if (contentEnRaw) {
+    try {
+      contentEn = JSON.parse(String(contentEnRaw));
+    } catch {
+      contentEn = null;
+    }
+  }
+  if (isEmptyTiptapDoc(contentEn)) contentEn = null;
 
   return programSchema.safeParse({
     title: formData.get("title"),
+    titleEn: formData.get("titleEn") || null,
     slug: formData.get("slug"),
     summary: formData.get("summary"),
+    summaryEn: formData.get("summaryEn") || null,
     content,
+    contentEn,
     coverId: formData.get("coverId") || null,
     isActive: formData.get("isActive") !== "false",
   });
@@ -54,9 +68,12 @@ export async function createProgram(
   const program = await prisma.program.create({
     data: {
       title: parsed.data.title,
+      titleEn: parsed.data.titleEn,
       slug: parsed.data.slug,
       summary: parsed.data.summary,
+      summaryEn: parsed.data.summaryEn,
       content: parsed.data.content as Prisma.InputJsonValue,
+      contentEn: parsed.data.contentEn as Prisma.InputJsonValue | undefined,
       coverId: parsed.data.coverId,
       isActive: parsed.data.isActive,
       order: (last?.order ?? -1) + 1,
@@ -101,9 +118,12 @@ export async function updateProgram(
     where: { id },
     data: {
       title: parsed.data.title,
+      titleEn: parsed.data.titleEn,
       slug: parsed.data.slug,
       summary: parsed.data.summary,
+      summaryEn: parsed.data.summaryEn,
       content: parsed.data.content as Prisma.InputJsonValue,
+      contentEn: parsed.data.contentEn as Prisma.InputJsonValue | undefined,
       coverId: parsed.data.coverId,
       isActive: parsed.data.isActive,
     },

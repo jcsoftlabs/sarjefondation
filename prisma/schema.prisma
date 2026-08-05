@@ -34,8 +34,11 @@ model Article {
   id          String    @id @default(cuid())
   slug        String    @unique
   title       String
+  titleEn     String?
   excerpt     String
+  excerptEn   String?
   content     Json // document Tiptap
+  contentEn   Json?
   coverId     String?
   cover       Media?    @relation(fields: [coverId], references: [id])
   status      Status    @default(DRAFT)
@@ -45,22 +48,27 @@ model Article {
 }
 
 model Program {
-  id       String  @id @default(cuid())
-  slug     String  @unique
-  title    String
-  summary  String
-  content  Json
-  coverId  String?
-  cover    Media?  @relation(fields: [coverId], references: [id])
-  order    Int     @default(0)
-  isActive Boolean @default(true)
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  title     String
+  titleEn   String?
+  summary   String
+  summaryEn String?
+  content   Json
+  contentEn Json?
+  coverId   String?
+  cover     Media?  @relation(fields: [coverId], references: [id])
+  order     Int     @default(0)
+  isActive  Boolean @default(true)
 }
 
 model TeamMember {
   id      String  @id @default(cuid())
   name    String
   role    String
+  roleEn  String?
   bio     String?
+  bioEn   String?
   photoId String?
   photo   Media?  @relation(fields: [photoId], references: [id])
   order   Int     @default(0)
@@ -70,39 +78,45 @@ model Testimonial {
   id      String  @id @default(cuid())
   author  String
   role    String?
+  roleEn  String?
   quote   String
+  quoteEn String?
   photoId String?
   photo   Media?  @relation(fields: [photoId], references: [id])
   order   Int     @default(0)
 }
 
 model ImpactStat {
-  id    String @id @default(cuid())
-  label String
-  value String
-  order Int    @default(0)
+  id      String  @id @default(cuid())
+  label   String
+  labelEn String?
+  value   String
+  order   Int     @default(0)
 }
 
 model Album {
-  id          String         @id @default(cuid())
-  title       String
-  slug        String         @unique
-  description String?
-  coverId     String?
-  cover       Media?         @relation("AlbumCover", fields: [coverId], references: [id])
-  order       Int            @default(0)
-  createdAt   DateTime       @default(now())
-  photos      GalleryPhoto[]
+  id            String         @id @default(cuid())
+  title         String
+  titleEn       String?
+  slug          String         @unique
+  description   String?
+  descriptionEn String?
+  coverId       String?
+  cover         Media?         @relation("AlbumCover", fields: [coverId], references: [id])
+  order         Int            @default(0)
+  createdAt     DateTime       @default(now())
+  photos        GalleryPhoto[]
 }
 
 model GalleryPhoto {
-  id      String  @id @default(cuid())
-  photoId String
-  photo   Media   @relation("AlbumPhoto", fields: [photoId], references: [id], onDelete: Cascade)
-  albumId String
-  album   Album   @relation(fields: [albumId], references: [id], onDelete: Cascade)
-  caption String?
-  order   Int     @default(0)
+  id        String  @id @default(cuid())
+  photoId   String
+  photo     Media   @relation("AlbumPhoto", fields: [photoId], references: [id], onDelete: Cascade)
+  albumId   String
+  album     Album   @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  caption   String?
+  captionEn String?
+  order     Int     @default(0)
 }
 
 model Media {

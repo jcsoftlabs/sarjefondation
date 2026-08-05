@@ -30,9 +30,12 @@ export default async function EditArticlePage(
           article={{
             id: article.id,
             title: article.title,
+            titleEn: article.titleEn,
             slug: article.slug,
             excerpt: article.excerpt,
+            excerptEn: article.excerptEn,
             content: article.content as JSONContent,
+            contentEn: article.contentEn as JSONContent | null,
             status: article.status,
             cover: article.cover
               ? { id: article.cover.id, url: article.cover.url, alt: article.cover.alt }

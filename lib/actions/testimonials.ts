@@ -13,7 +13,9 @@ function parseTestimonialForm(formData: FormData) {
   return testimonialSchema.safeParse({
     author: formData.get("author"),
     role: formData.get("role") || null,
+    roleEn: formData.get("roleEn") || null,
     quote: formData.get("quote"),
+    quoteEn: formData.get("quoteEn") || null,
     photoId: formData.get("photoId") || null,
   });
 }

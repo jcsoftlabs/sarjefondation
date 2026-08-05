@@ -21,7 +21,9 @@ type TeamMemberFormProps = {
     id: string;
     name: string;
     role: string;
+    roleEn: string | null;
     bio: string | null;
+    bioEn: string | null;
     photo: { id: string; url: string; alt: string } | null;
   };
 };
@@ -51,6 +53,25 @@ export function TeamMemberForm({ mode, action, member }: TeamMemberFormProps) {
           name="photoId"
           label="Photo"
         />
+
+        <div className="flex flex-col gap-6 rounded-md border border-line bg-paper p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Version anglaise (optionnelle)
+          </p>
+          <Input
+            id="member-role-en"
+            name="roleEn"
+            label="Rôle (EN)"
+            defaultValue={member?.roleEn ?? undefined}
+          />
+          <Textarea
+            id="member-bio-en"
+            name="bioEn"
+            label="Biographie (EN)"
+            rows={4}
+            defaultValue={member?.bioEn ?? undefined}
+          />
+        </div>
 
         {state && !state.ok && (
           <p role="alert" className="text-sm text-error">

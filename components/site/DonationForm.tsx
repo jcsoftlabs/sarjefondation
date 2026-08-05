@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { loadStripe, type Stripe as StripeClient } from "@stripe/stripe-js";
 import {
   Elements,
@@ -28,6 +29,7 @@ type Step =
   | { name: "error"; message: string };
 
 export function DonationForm() {
+  const t = useTranslations("Don");
   const [step, setStep] = useState<Step>({ name: "amount" });
 
   useEffect(() => {
@@ -44,10 +46,7 @@ export function DonationForm() {
   if (!stripePromise) {
     return (
       <Card>
-        <p className="text-sm text-muted">
-          Le don en ligne n&rsquo;est pas encore disponible. Vous pouvez nous
-          contacter via le formulaire pour organiser votre don.
-        </p>
+        <p className="text-sm text-muted">{t("indisponible")}</p>
       </Card>
     );
   }
@@ -55,10 +54,7 @@ export function DonationForm() {
   if (step.name === "success") {
     return (
       <Card>
-        <p className="text-body text-ink">
-          Merci infiniment pour votre don. Un reçu vous a été envoyé par
-          email.
-        </p>
+        <p className="text-body text-ink">{t("merci")}</p>
       </Card>
     );
   }
@@ -77,7 +73,7 @@ export function DonationForm() {
   return (
     <Suspense fallback={
       <Card>
-        <p className="text-sm text-muted">Chargement du formulaire de don...</p>
+        <p className="text-sm text-muted">{t("chargement")}</p>
       </Card>
     }>
       <AmountStep
@@ -95,11 +91,12 @@ function AmountStep({
   onReady: (clientSecret: string) => void;
   errorMessage?: string;
 }) {
+  const t = useTranslations("Don");
   const searchParams = useSearchParams();
   const urlAmount = searchParams.get("amount");
-  
-  const initialAmount = urlAmount && !isNaN(Number(urlAmount)) 
-    ? Number(urlAmount) 
+
+  const initialAmount = urlAmount && !isNaN(Number(urlAmount))
+    ? Number(urlAmount)
     : presetAmountsUsd[1];
 
   const [amount, setAmount] = useState<number | null>(presetAmountsUsd.includes(initialAmount) ? initialAmount : null);
@@ -113,7 +110,7 @@ function AmountStep({
 
   async function handleSubmit() {
     if (!effectiveAmount || effectiveAmount <= 0) {
-      setError("Choisissez un montant.");
+      setError(t("choisirMontant"));
       return;
     }
     setPending(true);
@@ -136,7 +133,7 @@ function AmountStep({
       <div className="flex flex-col gap-5">
         <div>
           <span className="mb-1.5 block text-sm font-medium text-ink">
-            Montant du don
+            {t("montantLabel")}
           </span>
           <div className="flex flex-wrap gap-2">
             {presetAmountsUsd.map((preset) => (
@@ -161,7 +158,7 @@ function AmountStep({
           <div className="mt-3 max-w-[10rem]">
             <Input
               id="donation-custom-amount"
-              label="Autre montant (USD)"
+              label={t("autreMontant")}
               type="number"
               min={5}
               step={1}
@@ -175,16 +172,16 @@ function AmountStep({
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             id="donation-name"
-            label="Nom"
-            helperText="Optionnel."
+            label={t("nom")}
+            helperText={t("nomHelper")}
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
           <Input
             id="donation-email"
-            label="Email"
+            label={t("email")}
             type="email"
-            helperText="Pour recevoir votre reçu."
+            helperText={t("emailHelper")}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -198,7 +195,7 @@ function AmountStep({
 
         <div>
           <Button type="button" variant="primary" onClick={handleSubmit} disabled={pending}>
-            {pending ? "Préparation…" : "Continuer"}
+            {pending ? t("preparation") : t("continuer")}
           </Button>
         </div>
       </div>
@@ -207,6 +204,7 @@ function AmountStep({
 }
 
 function PaymentStep({ onError }: { onError: (message: string) => void }) {
+  const t = useTranslations("Don");
   const stripe = useStripe();
   const elements = useElements();
   const [pending, setPending] = useState(false);
@@ -219,13 +217,13 @@ function PaymentStep({ onError }: { onError: (message: string) => void }) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/don`,
+        return_url: `${window.location.origin}${window.location.pathname}`,
       },
     });
     setPending(false);
 
     if (error) {
-      onError(error.message ?? "Le paiement a échoué. Réessayez.");
+      onError(error.message ?? t("paiementEchoue"));
     }
   }
 
@@ -235,7 +233,7 @@ function PaymentStep({ onError }: { onError: (message: string) => void }) {
         <PaymentElement />
         <div>
           <Button type="submit" variant="primary" disabled={!stripe || pending}>
-            {pending ? "Traitement…" : "Faire le don"}
+            {pending ? t("traitement") : t("faireLeDon")}
           </Button>
         </div>
       </form>

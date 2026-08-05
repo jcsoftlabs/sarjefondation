@@ -15,7 +15,7 @@ type ImpactStatFormProps = {
     state: ImpactStatActionState | null,
     formData: FormData,
   ) => Promise<ImpactStatActionState>;
-  stat?: { id: string; label: string; value: string };
+  stat?: { id: string; label: string; labelEn: string | null; value: string };
 };
 
 export function ImpactStatForm({ mode, action, stat }: ImpactStatFormProps) {
@@ -44,6 +44,18 @@ export function ImpactStatForm({ mode, action, stat }: ImpactStatFormProps) {
           required
           defaultValue={stat?.label}
         />
+
+        <div className="flex flex-col gap-6 rounded-md border border-line bg-paper p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Version anglaise (optionnelle)
+          </p>
+          <Input
+            id="stat-label-en"
+            name="labelEn"
+            label="Libellé (EN)"
+            defaultValue={stat?.labelEn ?? undefined}
+          />
+        </div>
 
         {state && !state.ok && (
           <p role="alert" className="text-sm text-error">

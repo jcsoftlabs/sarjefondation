@@ -33,8 +33,10 @@ export default async function EditAlbumPage(
           album={{
             id: album.id,
             title: album.title,
+            titleEn: album.titleEn,
             slug: album.slug,
             description: album.description,
+            descriptionEn: album.descriptionEn,
             cover: album.cover
               ? { id: album.cover.id, url: album.cover.url, alt: album.cover.alt }
               : null,
@@ -48,6 +50,7 @@ export default async function EditAlbumPage(
           photos={album.photos.map((p) => ({
             id: p.id,
             caption: p.caption,
+            captionEn: p.captionEn,
             photo: { id: p.photo.id, url: p.photo.url, alt: p.photo.alt },
           }))}
         />

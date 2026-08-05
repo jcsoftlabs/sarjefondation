@@ -18,6 +18,7 @@ import {
 type GalleryPhoto = {
   id: string;
   caption: string | null;
+  captionEn: string | null;
   photo: { id: string; url: string; alt: string };
 };
 
@@ -91,13 +92,14 @@ function PhotoRow({
 }) {
   const router = useRouter();
   const [caption, setCaption] = useState(photo.caption ?? "");
+  const [captionEn, setCaptionEn] = useState(photo.captionEn ?? "");
   const [savingCaption, setSavingCaption] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   async function handleCaptionBlur() {
-    if (caption === (photo.caption ?? "")) return;
+    if (caption === (photo.caption ?? "") && captionEn === (photo.captionEn ?? "")) return;
     setSavingCaption(true);
-    await updateGalleryPhotoCaption(photo.id, caption);
+    await updateGalleryPhotoCaption(photo.id, caption, captionEn);
     setSavingCaption(false);
     router.refresh();
   }
@@ -118,12 +120,20 @@ function PhotoRow({
         height={54}
         className="h-14 w-18 rounded-sm border border-line object-cover"
       />
-      <div className="flex-1">
+      <div className="flex-1 grid gap-3 sm:grid-cols-2">
         <Input
           id={`photo-caption-${photo.id}`}
-          label="Légende"
+          label="Légende (FR)"
           value={caption}
           onChange={(event) => setCaption(event.target.value)}
+          onBlur={handleCaptionBlur}
+          disabled={savingCaption}
+        />
+        <Input
+          id={`photo-caption-en-${photo.id}`}
+          label="Légende (EN)"
+          value={captionEn}
+          onChange={(event) => setCaptionEn(event.target.value)}
           onBlur={handleCaptionBlur}
           disabled={savingCaption}
         />

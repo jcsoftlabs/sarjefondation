@@ -1,22 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
-import { ButtonLink } from "@/components/ui/ButtonLink";
-
-const navLinks = [
-  { href: "/la-fondation", label: "La fondation" },
-  { href: "/programmes", label: "Programmes" },
-  { href: "/impact", label: "Impact" },
-  { href: "/actualites", label: "Actualités" },
-  { href: "/s-impliquer", label: "S'impliquer" },
-  { href: "/contact", label: "Contact" },
-];
+import { ButtonLink } from "@/components/site/ButtonLink";
+import { LanguageSwitcher } from "@/components/site/LanguageSwitcher";
 
 export function Header() {
+  const t = useTranslations("Nav");
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/la-fondation", label: t("laFondation") },
+    { href: "/programmes", label: t("programmes") },
+    { href: "/impact", label: t("impact") },
+    { href: "/actualites", label: t("actualites") },
+    { href: "/s-impliquer", label: t("sImpliquer") },
+    { href: "/contact", label: t("contact") },
+  ] as const;
 
   return (
     <header className="border-b border-line bg-paper">
@@ -44,12 +48,14 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher pathname={pathname} className="hidden md:flex" />
+
           <ButtonLink
             href="/don"
             variant="primary"
             className="px-4 py-2 text-sm"
           >
-            Faire un don
+            {t("faireUnDon")}
           </ButtonLink>
 
           <button
@@ -57,10 +63,10 @@ export function Header() {
             className="flex items-center justify-center rounded-sm border border-line p-2 md:hidden"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
-            aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-label={menuOpen ? t("fermerMenu") : t("ouvrirMenu")}
             onClick={() => setMenuOpen((value) => !value)}
           >
-            <span className="sr-only">{menuOpen ? "Fermer le menu" : "Ouvrir le menu"}</span>
+            <span className="sr-only">{menuOpen ? t("fermerMenu") : t("ouvrirMenu")}</span>
             <svg
               width="22"
               height="22"
@@ -107,6 +113,7 @@ export function Header() {
             {link.label}
           </Link>
         ))}
+        <LanguageSwitcher pathname={pathname} className="mt-2 border-t border-line pt-3" />
       </nav>
     </header>
   );

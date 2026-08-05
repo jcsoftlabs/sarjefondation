@@ -21,8 +21,10 @@ type AlbumFormProps = {
   album?: {
     id: string;
     title: string;
+    titleEn: string | null;
     slug: string;
     description: string | null;
+    descriptionEn: string | null;
     cover: { id: string; url: string; alt: string } | null;
   };
 };
@@ -74,6 +76,25 @@ export function AlbumForm({ mode, action, album }: AlbumFormProps) {
           defaultValue={album?.description ?? undefined}
         />
         <CoverImagePicker initialCover={album?.cover} name="coverId" label="Couverture" />
+
+        <div className="flex flex-col gap-6 rounded-md border border-line bg-paper p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Version anglaise (optionnelle)
+          </p>
+          <Input
+            id="album-title-en"
+            name="titleEn"
+            label="Titre (EN)"
+            defaultValue={album?.titleEn ?? undefined}
+          />
+          <Textarea
+            id="album-description-en"
+            name="descriptionEn"
+            label="Description (EN)"
+            rows={3}
+            defaultValue={album?.descriptionEn ?? undefined}
+          />
+        </div>
 
         {state && !state.ok && (
           <p role="alert" className="text-sm text-error">

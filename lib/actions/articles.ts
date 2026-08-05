@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { articleSchema, slugify } from "@/lib/validators/articles";
 import { Prisma } from "@/app/generated/prisma/client";
+import { isEmptyTiptapDoc } from "@/lib/tiptap-empty";
 
 export type ArticleActionState =
   | { ok: true }
@@ -20,12 +21,25 @@ function parseArticleForm(formData: FormData) {
   } catch {
     content = {};
   }
+  let contentEn: unknown = null;
+  const contentEnRaw = formData.get("contentEn");
+  if (contentEnRaw) {
+    try {
+      contentEn = JSON.parse(String(contentEnRaw));
+    } catch {
+      contentEn = null;
+    }
+  }
+  if (isEmptyTiptapDoc(contentEn)) contentEn = null;
 
   return articleSchema.safeParse({
     title: formData.get("title"),
+    titleEn: formData.get("titleEn") || null,
     slug: formData.get("slug"),
     excerpt: formData.get("excerpt"),
+    excerptEn: formData.get("excerptEn") || null,
     content,
+    contentEn,
     coverId: formData.get("coverId") || null,
     status: status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
   });
@@ -78,9 +92,12 @@ export async function createArticle(
   const article = await prisma.article.create({
     data: {
       title: parsed.data.title,
+      titleEn: parsed.data.titleEn,
       slug: parsed.data.slug,
       excerpt: parsed.data.excerpt,
+      excerptEn: parsed.data.excerptEn,
       content: parsed.data.content as Prisma.InputJsonValue,
+      contentEn: parsed.data.contentEn as Prisma.InputJsonValue | undefined,
       coverId: parsed.data.coverId,
       status: parsed.data.status,
       publishedAt: parsed.data.status === "PUBLISHED" ? new Date() : null,
@@ -144,9 +161,12 @@ export async function updateArticle(
     where: { id },
     data: {
       title: parsed.data.title,
+      titleEn: parsed.data.titleEn,
       slug: parsed.data.slug,
       excerpt: parsed.data.excerpt,
+      excerptEn: parsed.data.excerptEn,
       content: parsed.data.content as Prisma.InputJsonValue,
+      contentEn: parsed.data.contentEn as Prisma.InputJsonValue | undefined,
       coverId: parsed.data.coverId,
       status: parsed.data.status,
       publishedAt: isNewlyPublished

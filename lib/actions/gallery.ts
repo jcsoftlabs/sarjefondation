@@ -19,9 +19,15 @@ export async function addGalleryPhoto(
   albumId: string,
   photoId: string,
   caption: string,
+  captionEn?: string,
 ): Promise<GalleryPhotoActionState> {
   const admin = await requireAdmin();
-  const parsed = galleryPhotoSchema.safeParse({ albumId, photoId, caption: caption || null });
+  const parsed = galleryPhotoSchema.safeParse({
+    albumId,
+    photoId,
+    caption: caption || null,
+    captionEn: captionEn || null,
+  });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
@@ -42,11 +48,12 @@ export async function addGalleryPhoto(
 export async function updateGalleryPhotoCaption(
   photoId: string,
   caption: string,
+  captionEn?: string,
 ): Promise<GalleryPhotoActionState> {
   const admin = await requireAdmin();
   const photo = await prisma.galleryPhoto.update({
     where: { id: photoId },
-    data: { caption: caption || null },
+    data: { caption: caption || null, captionEn: captionEn || null },
   });
 
   await logAudit({ userId: admin.id, action: "UPDATE", entity: "GalleryPhoto", entityId: photoId });

@@ -24,13 +24,18 @@ type ProgramFormProps = {
   program?: {
     id: string;
     title: string;
+    titleEn: string | null;
     slug: string;
     summary: string;
+    summaryEn: string | null;
     content: JSONContent;
+    contentEn: JSONContent | null;
     isActive: boolean;
     cover: { id: string; url: string; alt: string } | null;
   };
 };
+
+const EMPTY_DOC: JSONContent = { type: "doc", content: [{ type: "paragraph" }] };
 
 export function ProgramForm({ mode, action, program }: ProgramFormProps) {
   const router = useRouter();
@@ -38,9 +43,8 @@ export function ProgramForm({ mode, action, program }: ProgramFormProps) {
   const [title, setTitle] = useState(program?.title ?? "");
   const [slug, setSlug] = useState(program?.slug ?? "");
   const [slugEdited, setSlugEdited] = useState(mode === "edit");
-  const [content, setContent] = useState<JSONContent>(
-    program?.content ?? { type: "doc", content: [{ type: "paragraph" }] },
-  );
+  const [content, setContent] = useState<JSONContent>(program?.content ?? EMPTY_DOC);
+  const [contentEn, setContentEn] = useState<JSONContent>(program?.contentEn ?? EMPTY_DOC);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [dismissedState, setDismissedState] = useState<ProgramActionState | null>(null);
   const showSuccessToast = state?.ok === true && state !== dismissedState;
@@ -98,6 +102,30 @@ export function ProgramForm({ mode, action, program }: ProgramFormProps) {
             { value: "false", label: "Inactif" },
           ]}
         />
+
+        <div className="flex flex-col gap-6 rounded-md border border-line bg-paper p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Version anglaise (optionnelle)
+          </p>
+          <Input
+            id="program-title-en"
+            name="titleEn"
+            label="Titre (EN)"
+            defaultValue={program?.titleEn ?? undefined}
+          />
+          <Textarea
+            id="program-summary-en"
+            name="summaryEn"
+            label="Résumé (EN)"
+            rows={3}
+            defaultValue={program?.summaryEn ?? undefined}
+          />
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-ink">Contenu (EN)</span>
+            <TiptapEditor initialContent={program?.contentEn ?? null} onChange={setContentEn} />
+            <input type="hidden" name="contentEn" value={JSON.stringify(contentEn)} />
+          </div>
+        </div>
 
         {state && !state.ok && (
           <p role="alert" className="text-sm text-error">

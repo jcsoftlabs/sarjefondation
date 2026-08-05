@@ -23,7 +23,7 @@ export default async function EditImpactStatPage(
         <ImpactStatForm
           mode="edit"
           action={updateImpactStat.bind(null, id)}
-          stat={{ id: stat.id, label: stat.label, value: stat.value }}
+          stat={{ id: stat.id, label: stat.label, labelEn: stat.labelEn, value: stat.value }}
         />
       </div>
     </div>

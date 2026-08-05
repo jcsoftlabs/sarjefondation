@@ -30,7 +30,9 @@ export default async function EditTestimonialPage(
             id: testimonial.id,
             author: testimonial.author,
             role: testimonial.role,
+            roleEn: testimonial.roleEn,
             quote: testimonial.quote,
+            quoteEn: testimonial.quoteEn,
             photo: testimonial.photo
               ? { id: testimonial.photo.id, url: testimonial.photo.url, alt: testimonial.photo.alt }
               : null,

@@ -24,13 +24,18 @@ type ArticleFormProps = {
   article?: {
     id: string;
     title: string;
+    titleEn: string | null;
     slug: string;
     excerpt: string;
+    excerptEn: string | null;
     content: JSONContent;
+    contentEn: JSONContent | null;
     status: "DRAFT" | "PUBLISHED";
     cover: { id: string; url: string; alt: string } | null;
   };
 };
+
+const EMPTY_DOC: JSONContent = { type: "doc", content: [{ type: "paragraph" }] };
 
 export function ArticleForm({ mode, action, article }: ArticleFormProps) {
   const router = useRouter();
@@ -38,9 +43,8 @@ export function ArticleForm({ mode, action, article }: ArticleFormProps) {
   const [title, setTitle] = useState(article?.title ?? "");
   const [slug, setSlug] = useState(article?.slug ?? "");
   const [slugEdited, setSlugEdited] = useState(mode === "edit");
-  const [content, setContent] = useState<JSONContent>(
-    article?.content ?? { type: "doc", content: [{ type: "paragraph" }] },
-  );
+  const [content, setContent] = useState<JSONContent>(article?.content ?? EMPTY_DOC);
+  const [contentEn, setContentEn] = useState<JSONContent>(article?.contentEn ?? EMPTY_DOC);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [dismissedState, setDismissedState] = useState<ArticleActionState | null>(null);
   const showSuccessToast = state?.ok === true && state !== dismissedState;
@@ -101,6 +105,30 @@ export function ArticleForm({ mode, action, article }: ArticleFormProps) {
             { value: "PUBLISHED", label: "Publié" },
           ]}
         />
+
+        <div className="flex flex-col gap-6 rounded-md border border-line bg-paper p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Version anglaise (optionnelle)
+          </p>
+          <Input
+            id="article-title-en"
+            name="titleEn"
+            label="Titre (EN)"
+            defaultValue={article?.titleEn ?? undefined}
+          />
+          <Textarea
+            id="article-excerpt-en"
+            name="excerptEn"
+            label="Résumé (EN)"
+            rows={3}
+            defaultValue={article?.excerptEn ?? undefined}
+          />
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-ink">Contenu (EN)</span>
+            <TiptapEditor initialContent={article?.contentEn ?? null} onChange={setContentEn} />
+            <input type="hidden" name="contentEn" value={JSON.stringify(contentEn)} />
+          </div>
+        </div>
 
         {state && !state.ok && (
           <p role="alert" className="text-sm text-error">

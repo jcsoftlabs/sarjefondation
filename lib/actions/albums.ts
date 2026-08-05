@@ -14,8 +14,10 @@ export type AlbumActionState =
 function parseAlbumForm(formData: FormData) {
   return albumSchema.safeParse({
     title: formData.get("title"),
+    titleEn: formData.get("titleEn") || null,
     slug: formData.get("slug"),
     description: formData.get("description") || null,
+    descriptionEn: formData.get("descriptionEn") || null,
     coverId: formData.get("coverId") || null,
   });
 }

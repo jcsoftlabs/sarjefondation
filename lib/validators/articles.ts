@@ -13,9 +13,12 @@ export const slugSchema = z
 
 export const articleSchema = z.object({
   title: z.string().min(1, "Le titre est requis.").max(200),
+  titleEn: z.string().max(200).nullable().optional(),
   slug: slugSchema,
   excerpt: z.string().min(1, "Le résumé est requis.").max(300),
+  excerptEn: z.string().max(300).nullable().optional(),
   content: z.record(z.string(), z.unknown()),
+  contentEn: z.record(z.string(), z.unknown()).nullable().optional(),
   coverId: z.string().nullable().optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]),
 });

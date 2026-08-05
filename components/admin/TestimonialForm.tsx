@@ -21,7 +21,9 @@ type TestimonialFormProps = {
     id: string;
     author: string;
     role: string | null;
+    roleEn: string | null;
     quote: string;
+    quoteEn: string | null;
     photo: { id: string; url: string; alt: string } | null;
   };
 };
@@ -63,6 +65,25 @@ export function TestimonialForm({ mode, action, testimonial }: TestimonialFormPr
           name="photoId"
           label="Photo"
         />
+
+        <div className="flex flex-col gap-6 rounded-md border border-line bg-paper p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Version anglaise (optionnelle)
+          </p>
+          <Input
+            id="testimonial-role-en"
+            name="roleEn"
+            label="Rôle (EN)"
+            defaultValue={testimonial?.roleEn ?? undefined}
+          />
+          <Textarea
+            id="testimonial-quote-en"
+            name="quoteEn"
+            label="Témoignage (EN)"
+            rows={5}
+            defaultValue={testimonial?.quoteEn ?? undefined}
+          />
+        </div>
 
         {state && !state.ok && (
           <p role="alert" className="text-sm text-error">

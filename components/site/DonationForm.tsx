@@ -160,7 +160,7 @@ function AmountStep({
               id="donation-custom-amount"
               label={t("autreMontant")}
               type="number"
-              min={5}
+              min={2}
               step={1}
               value={customAmount}
               onChange={(event) => setCustomAmount(event.target.value)}

@@ -7,7 +7,7 @@ export const donationSchema = z.object({
   amountCents: z
     .number()
     .int()
-    .min(500, "Le don minimum est de 5 $.")
+    .min(200, "Le don minimum est de 2 $.")
     .max(5_000_000, "Le don maximum est de 50 000 $."),
   donorName: z.string().max(120).optional(),
   donorEmail: z.union([z.email("Adresse email invalide."), z.literal("")]).optional(),

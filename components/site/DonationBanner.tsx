@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 
 export function DonationBanner() {
-  const t = useTranslations("DonationBanner");
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const closed = sessionStorage.getItem("donation-banner-closed");
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- lu depuis sessionStorage, indisponible au premier rendu serveur
     setIsVisible(!closed);
   }, []);
 
@@ -24,62 +21,95 @@ export function DonationBanner() {
   const amounts = [50, 100, 250, 500, 1000];
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full bg-accent text-white shadow-[0_-4px_15px_rgba(0,0,0,0.2)]">
-      <div className="relative mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-4 md:flex-row md:px-6 lg:gap-8">
-        
-        {/* Left Section */}
-        <div className="flex-1 shrink-0 text-center md:text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">
-            {t("jeSoutiens")}
-          </p>
-          <p className="font-display text-base font-bold leading-tight sm:text-lg uppercase">
-            {t("nomFondation")}
+    <div className="fixed bottom-0 left-0 right-0 z-[100] bg-accent text-white shadow-[0_-6px_24px_rgba(0,0,0,0.25)]">
+      {/* Close button — top-right corner always */}
+      <button
+        onClick={handleClose}
+        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full border border-white/40 text-white/80 transition-all hover:border-white hover:text-white"
+        aria-label="Fermer le bandeau de don"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      {/* Desktop layout — single row */}
+      <div className="hidden md:flex items-center justify-between gap-6 px-8 py-4 pr-14">
+        {/* Left */}
+        <div className="shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">JE SOUTIENS</p>
+          <p className="font-display text-base font-extrabold uppercase leading-tight tracking-wide">
+            LA FONDATION SARJE
           </p>
         </div>
 
-        {/* Center / Actions */}
-        <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <Link
-            href="/don"
-            className="whitespace-nowrap bg-accent-deep px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-white hover:text-accent"
-          >
-            {t("faireUnDon")}
-          </Link>
+        {/* Divider */}
+        <div className="h-10 w-px shrink-0 bg-white/30" />
 
-          <div className="hidden h-10 w-px bg-white/30 md:block" />
+        {/* CTA */}
+        <Link
+          href="/don"
+          className="shrink-0 bg-accent-deep px-5 py-2 text-xs font-extrabold uppercase tracking-widest text-white transition-colors hover:bg-white hover:text-accent"
+        >
+          FAIRE UN DON
+        </Link>
 
-          {/* Right Section */}
-          <div className="flex flex-col items-center gap-2 sm:items-start">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">
-              {t("jeFaisUnDon")}
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 border-t border-white/30 pt-2 sm:border-none sm:pt-0">
-              {amounts.map((amount) => (
-                <Link
-                  key={amount}
-                  href={`/don?amount=${amount}`}
-                  className="border border-white/60 px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-white hover:text-accent"
-                >
-                  {amount} $
-                </Link>
-              ))}
-            </div>
+        {/* Divider */}
+        <div className="h-10 w-px shrink-0 bg-white/30" />
+
+        {/* Right */}
+        <div>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/80">JE FAIS UN DON</p>
+          <div className="flex flex-wrap gap-2">
+            {amounts.map((amount) => (
+              <Link
+                key={amount}
+                href={`/don?amount=${amount}`}
+                className="border border-white/50 px-4 py-1.5 text-sm font-bold transition-colors hover:bg-white hover:text-accent"
+              >
+                {amount} $
+              </Link>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Close Button */}
-        <button
-          onClick={handleClose}
-          className="absolute right-2 top-2 p-2 text-white/80 transition-transform hover:scale-110 hover:text-white md:static md:p-0"
-          aria-label={t("fermer")}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-        </button>
+      {/* Mobile layout — stacked */}
+      <div className="flex flex-col gap-3 px-4 py-4 pr-12 md:hidden">
+        {/* Top row: label + CTA */}
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-white/80">JE SOUTIENS</p>
+            <p className="font-display text-sm font-extrabold uppercase leading-tight">
+              LA FONDATION SARJE
+            </p>
+          </div>
+          <Link
+            href="/don"
+            className="shrink-0 bg-accent-deep px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-white transition-colors hover:bg-white hover:text-accent"
+          >
+            FAIRE UN DON
+          </Link>
+        </div>
+
+        {/* Bottom row: amounts */}
+        <div>
+          <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-white/80">JE FAIS UN DON</p>
+          <div className="flex flex-wrap gap-2">
+            {amounts.map((amount) => (
+              <Link
+                key={amount}
+                href={`/don?amount=${amount}`}
+                className="border border-white/50 px-3 py-1 text-sm font-bold transition-colors hover:bg-white hover:text-accent"
+              >
+                {amount} $
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+

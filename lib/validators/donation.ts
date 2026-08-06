@@ -11,6 +11,7 @@ export const donationSchema = z.object({
     .max(5_000_000, "Le don maximum est de 50 000 $."),
   donorName: z.string().max(120).optional(),
   donorEmail: z.union([z.email("Adresse email invalide."), z.literal("")]).optional(),
+  sourceId: z.string().min(1, "Carte invalide."),
 });
 
 export type DonationInput = z.infer<typeof donationSchema>;

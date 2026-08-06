@@ -1,49 +1,54 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Script from "next/script";
 import { useTranslations } from "next-intl";
-import { loadStripe, type Stripe as StripeClient } from "@stripe/stripe-js";
-import {
-  Elements,
-  PaymentElement,
-  useElements,
-  useStripe,
-} from "@stripe/react-stripe-js";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
-import { createDonationPaymentIntent } from "@/lib/actions/donation";
+import { createDonationPayment } from "@/lib/actions/donation";
 import { presetAmountsUsd } from "@/lib/validators/donation";
 
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise: Promise<StripeClient | null> | null = publishableKey
-  ? loadStripe(publishableKey)
-  : null;
+const applicationId = process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID;
+const locationId = process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID;
+const squareSdkUrl =
+  process.env.NEXT_PUBLIC_SQUARE_ENVIRONMENT === "production"
+    ? "https://web.squarecdn.com/v1/square.js"
+    : "https://sandbox.web.squarecdn.com/v1/square.js";
+const isSquareConfigured = Boolean(applicationId && locationId);
+
+type SquareCard = {
+  attach: (selector: string) => Promise<void>;
+  tokenize: () => Promise<{ status: string; token?: string; errors?: { message: string }[] }>;
+  destroy: () => Promise<void>;
+};
+
+// Chargé dynamiquement par le script Square Web Payments SDK.
+declare global {
+  interface Window {
+    Square?: {
+      payments: (
+        appId: string,
+        locationId: string,
+      ) => { card: () => Promise<SquareCard> };
+    };
+  }
+}
 
 type Step =
   | { name: "amount" }
-  | { name: "payment"; clientSecret: string }
+  | { name: "payment"; amountCents: number; donorName: string; donorEmail: string }
   | { name: "success" }
   | { name: "error"; message: string };
 
 export function DonationForm() {
   const t = useTranslations("Don");
   const [step, setStep] = useState<Step>({ name: "amount" });
+  const [sdkReady, setSdkReady] = useState(false);
 
-  useEffect(() => {
-    // Lecture de l'URL au retour d'une redirection Stripe (certains moyens
-    // de paiement redirigent hors du site avant de revenir) : window n'existe
-    // pas côté serveur, cette synchronisation ne peut se faire qu'ici.
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("redirect_status") === "succeeded") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStep({ name: "success" });
-    }
-  }, []);
-
-  if (!stripePromise) {
+  if (!isSquareConfigured) {
     return (
       <Card>
         <p className="text-sm text-muted">{t("indisponible")}</p>
@@ -51,36 +56,43 @@ export function DonationForm() {
     );
   }
 
-  if (step.name === "success") {
-    return (
-      <Card>
-        <p className="text-body text-ink">{t("merci")}</p>
-      </Card>
-    );
-  }
-
-  if (step.name === "payment") {
-    return (
-      <Elements
-        stripe={stripePromise}
-        options={{ clientSecret: step.clientSecret }}
-      >
-        <PaymentStep onError={(message) => setStep({ name: "error", message })} />
-      </Elements>
-    );
-  }
-
   return (
-    <Suspense fallback={
-      <Card>
-        <p className="text-sm text-muted">{t("chargement")}</p>
-      </Card>
-    }>
-      <AmountStep
-        errorMessage={step.name === "error" ? step.message : undefined}
-        onReady={(clientSecret) => setStep({ name: "payment", clientSecret })}
-      />
-    </Suspense>
+    <>
+      <Script src={squareSdkUrl} onReady={() => setSdkReady(true)} />
+
+      {step.name === "success" ? (
+        <Card>
+          <p className="text-body text-ink">{t("merci")}</p>
+        </Card>
+      ) : step.name === "payment" ? (
+        sdkReady ? (
+          <PaymentStep
+            amountCents={step.amountCents}
+            donorName={step.donorName}
+            donorEmail={step.donorEmail}
+            onSuccess={() => setStep({ name: "success" })}
+            onError={(message) => setStep({ name: "error", message })}
+          />
+        ) : (
+          <Card>
+            <p className="text-sm text-muted">{t("chargement")}</p>
+          </Card>
+        )
+      ) : (
+        <Suspense fallback={
+          <Card>
+            <p className="text-sm text-muted">{t("chargement")}</p>
+          </Card>
+        }>
+          <AmountStep
+            errorMessage={step.name === "error" ? step.message : undefined}
+            onReady={(amountCents, donorName, donorEmail) =>
+              setStep({ name: "payment", amountCents, donorName, donorEmail })
+            }
+          />
+        </Suspense>
+      )}
+    </>
   );
 }
 
@@ -88,7 +100,7 @@ function AmountStep({
   onReady,
   errorMessage,
 }: {
-  onReady: (clientSecret: string) => void;
+  onReady: (amountCents: number, donorName: string, donorEmail: string) => void;
   errorMessage?: string;
 }) {
   const t = useTranslations("Don");
@@ -103,29 +115,17 @@ function AmountStep({
   const [customAmount, setCustomAmount] = useState(presetAmountsUsd.includes(initialAmount) ? "" : String(initialAmount));
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(errorMessage ?? null);
 
   const effectiveAmount = customAmount ? Number(customAmount) : amount;
 
-  async function handleSubmit() {
+  function handleSubmit() {
     if (!effectiveAmount || effectiveAmount <= 0) {
       setError(t("choisirMontant"));
       return;
     }
-    setPending(true);
     setError(null);
-    const result = await createDonationPaymentIntent({
-      amountCents: Math.round(effectiveAmount * 100),
-      donorName: name || undefined,
-      donorEmail: email || undefined,
-    });
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    onReady(result.clientSecret);
+    onReady(Math.round(effectiveAmount * 100), name, email);
   }
 
   return (
@@ -194,8 +194,8 @@ function AmountStep({
         )}
 
         <div>
-          <Button type="button" variant="primary" onClick={handleSubmit} disabled={pending}>
-            {pending ? t("preparation") : t("continuer")}
+          <Button type="button" variant="primary" onClick={handleSubmit}>
+            {t("continuer")}
           </Button>
         </div>
       </div>
@@ -203,36 +203,78 @@ function AmountStep({
   );
 }
 
-function PaymentStep({ onError }: { onError: (message: string) => void }) {
+function PaymentStep({
+  amountCents,
+  donorName,
+  donorEmail,
+  onSuccess,
+  onError,
+}: {
+  amountCents: number;
+  donorName: string;
+  donorEmail: string;
+  onSuccess: () => void;
+  onError: (message: string) => void;
+}) {
   const t = useTranslations("Don");
-  const stripe = useStripe();
-  const elements = useElements();
+  const cardRef = useRef<SquareCard | null>(null);
+  const [cardReady, setCardReady] = useState(false);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function mountCard() {
+      if (!window.Square || !applicationId || !locationId) return;
+      const payments = window.Square.payments(applicationId, locationId);
+      const card = await payments.card();
+      await card.attach("#square-card-container");
+      if (cancelled) {
+        await card.destroy();
+        return;
+      }
+      cardRef.current = card;
+      setCardReady(true);
+    }
+    mountCard();
+    return () => {
+      cancelled = true;
+      cardRef.current?.destroy();
+    };
+  }, []);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!stripe || !elements) return;
+    if (!cardRef.current) return;
 
     setPending(true);
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}${window.location.pathname}`,
-      },
+    const result = await cardRef.current.tokenize();
+    if (result.status !== "OK" || !result.token) {
+      setPending(false);
+      onError(result.errors?.[0]?.message ?? t("paiementEchoue"));
+      return;
+    }
+
+    const response = await createDonationPayment({
+      amountCents,
+      donorName: donorName || undefined,
+      donorEmail: donorEmail || undefined,
+      sourceId: result.token,
     });
     setPending(false);
 
-    if (error) {
-      onError(error.message ?? t("paiementEchoue"));
+    if (!response.ok) {
+      onError(response.error);
+      return;
     }
+    onSuccess();
   }
 
   return (
     <Card>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <PaymentElement />
+        <div id="square-card-container" />
         <div>
-          <Button type="submit" variant="primary" disabled={!stripe || pending}>
+          <Button type="submit" variant="primary" disabled={!cardReady || pending}>
             {pending ? t("traitement") : t("faireLeDon")}
           </Button>
         </div>

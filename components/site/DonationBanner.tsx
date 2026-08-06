@@ -8,6 +8,7 @@ export function DonationBanner() {
 
   useEffect(() => {
     const closed = sessionStorage.getItem("donation-banner-closed");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lu depuis sessionStorage, indisponible au premier rendu serveur
     setIsVisible(!closed);
   }, []);
 
@@ -54,7 +55,7 @@ export function DonationBanner() {
               href="/s-impliquer"
               className="bg-accent-deep px-5 py-2 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-white hover:text-accent"
             >
-              S'IMPLIQUER
+              S&apos;IMPLIQUER
             </Link>
             {amounts.map((amount) => (
               <Link

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isDonationEnabled } from "@/lib/stripe";
+import { isDonationEnabled } from "@/lib/square";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -28,8 +28,8 @@ export default async function DonsAdminPage() {
         <Card className="mt-6 border-dashed">
           <p className="text-sm text-muted">
             Le don en ligne n&rsquo;est pas encore configuré. Renseignez les
-            clés Stripe dans les variables d&rsquo;environnement pour
-            l&rsquo;activer.
+            identifiants Square dans les variables d&rsquo;environnement
+            pour l&rsquo;activer.
           </p>
         </Card>
       )}

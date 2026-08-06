@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { square } from "@/lib/square";
+import { square, squareLocationId } from "@/lib/square";
 import { prisma } from "@/lib/db";
 import { donationSchema } from "@/lib/validators/donation";
 import type { DonationStatus } from "@/app/generated/prisma/client";
@@ -16,7 +16,7 @@ export type CreateDonationResult =
 // Action encaisse directement via payments.create et connaît le résultat
 // final immédiatement — pas d'étape de confirmation séparée.
 export async function createDonationPayment(input: unknown): Promise<CreateDonationResult> {
-  if (!square || !process.env.SQUARE_LOCATION_ID) {
+  if (!square || !squareLocationId) {
     return {
       ok: false,
       error: "Le don en ligne n'est pas encore disponible.",
@@ -41,7 +41,7 @@ export async function createDonationPayment(input: unknown): Promise<CreateDonat
         amount: BigInt(amountCents),
         currency: "USD",
       },
-      locationId: process.env.SQUARE_LOCATION_ID,
+      locationId: squareLocationId,
       buyerEmailAddress: donorEmail || undefined,
       note: donorName ? `Don de ${donorName}` : undefined,
     });

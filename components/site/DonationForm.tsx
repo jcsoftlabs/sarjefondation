@@ -19,11 +19,34 @@ const squareSdkUrl =
     : "https://sandbox.web.squarecdn.com/v1/square.js";
 const isSquareConfigured = Boolean(applicationId && locationId);
 
-type SquareCard = {
+type TokenizeResult = { status: string; token?: string; errors?: { message: string }[] };
+
+// Interface commune à card() et googlePay() : un bouton monté dans le DOM,
+// tokenisé sur clic.
+type AttachableMethod = {
   attach: (selector: string) => Promise<void>;
-  tokenize: () => Promise<{ status: string; token?: string; errors?: { message: string }[] }>;
+  tokenize: () => Promise<TokenizeResult>;
   destroy: () => Promise<void>;
 };
+
+// Apple Pay ne fournit pas de attach() : le bouton est un élément HTML
+// standard stylé selon les règles Apple, tokenisé sur clic.
+type ApplePayMethod = {
+  tokenize: () => Promise<TokenizeResult>;
+};
+
+// Cash App Pay tokenise de façon événementielle (QR code ou redirection),
+// pas sur un simple clic synchrone.
+type CashAppPayMethod = {
+  attach: (selector: string, options?: Record<string, string>) => Promise<void>;
+  addEventListener: (
+    event: "ontokenization",
+    handler: (event: { detail: { tokenResult: TokenizeResult } }) => void,
+  ) => void;
+  destroy: () => Promise<void>;
+};
+
+type PaymentRequest = unknown;
 
 // Chargé dynamiquement par le script Square Web Payments SDK.
 declare global {
@@ -32,8 +55,22 @@ declare global {
       payments: (
         appId: string,
         locationId: string,
-      ) => { card: () => Promise<SquareCard> };
+      ) => {
+        paymentRequest: (options: {
+          countryCode: string;
+          currencyCode: string;
+          total: { amount: string; label: string };
+        }) => PaymentRequest;
+        card: () => Promise<AttachableMethod>;
+        googlePay: (paymentRequest: PaymentRequest) => Promise<AttachableMethod>;
+        applePay: (paymentRequest: PaymentRequest) => Promise<ApplePayMethod>;
+        cashAppPay: (
+          paymentRequest: PaymentRequest,
+          options: { redirectURL: string; referenceId?: string },
+        ) => Promise<CashAppPayMethod>;
+      };
     };
+    ApplePaySession?: unknown;
   }
 }
 
@@ -217,48 +254,24 @@ function PaymentStep({
   onError: (message: string) => void;
 }) {
   const t = useTranslations("Don");
-  const cardRef = useRef<SquareCard | null>(null);
+  const cardRef = useRef<AttachableMethod | null>(null);
+  const googlePayRef = useRef<AttachableMethod | null>(null);
+  const applePayRef = useRef<ApplePayMethod | null>(null);
+  const cashAppPayRef = useRef<CashAppPayMethod | null>(null);
+
   const [cardReady, setCardReady] = useState(false);
+  const [googlePayVisible, setGooglePayVisible] = useState(false);
+  const [applePayVisible, setApplePayVisible] = useState(false);
+  const [cashAppPayVisible, setCashAppPayVisible] = useState(false);
   const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function mountCard() {
-      if (!window.Square || !applicationId || !locationId) return;
-      const payments = window.Square.payments(applicationId, locationId);
-      const card = await payments.card();
-      await card.attach("#square-card-container");
-      if (cancelled) {
-        await card.destroy();
-        return;
-      }
-      cardRef.current = card;
-      setCardReady(true);
-    }
-    mountCard();
-    return () => {
-      cancelled = true;
-      cardRef.current?.destroy();
-    };
-  }, []);
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!cardRef.current) return;
-
+  async function submitSourceId(sourceId: string) {
     setPending(true);
-    const result = await cardRef.current.tokenize();
-    if (result.status !== "OK" || !result.token) {
-      setPending(false);
-      onError(result.errors?.[0]?.message ?? t("paiementEchoue"));
-      return;
-    }
-
     const response = await createDonationPayment({
       amountCents,
       donorName: donorName || undefined,
       donorEmail: donorEmail || undefined,
-      sourceId: result.token,
+      sourceId,
     });
     setPending(false);
 
@@ -269,16 +282,164 @@ function PaymentStep({
     onSuccess();
   }
 
+  useEffect(() => {
+    let cancelled = false;
+    const destroyers: (() => Promise<void>)[] = [];
+
+    async function mountMethods() {
+      if (!window.Square || !applicationId || !locationId) return;
+      const payments = window.Square.payments(applicationId, locationId);
+      const paymentRequest = payments.paymentRequest({
+        countryCode: "US",
+        currencyCode: "USD",
+        total: { amount: (amountCents / 100).toFixed(2), label: "Don — Fondation Sarje" },
+      });
+
+      // Carte bancaire — toujours disponible.
+      const card = await payments.card();
+      await card.attach("#square-card-container");
+      if (cancelled) {
+        await card.destroy();
+        return;
+      }
+      cardRef.current = card;
+      destroyers.push(() => card.destroy());
+      setCardReady(true);
+
+      // Google Pay — se déclare non disponible sur les navigateurs/appareils
+      // qui ne le supportent pas plutôt que de faire échouer le formulaire.
+      try {
+        const googlePay = await payments.googlePay(paymentRequest);
+        await googlePay.attach("#google-pay-button");
+        if (cancelled) {
+          await googlePay.destroy();
+        } else {
+          googlePayRef.current = googlePay;
+          destroyers.push(() => googlePay.destroy());
+          setGooglePayVisible(true);
+        }
+      } catch {
+        // Non disponible sur ce navigateur — bouton simplement masqué.
+      }
+
+      // Apple Pay — uniquement Safari sur un appareil Apple.
+      if (window.ApplePaySession) {
+        try {
+          const applePay = await payments.applePay(paymentRequest);
+          if (!cancelled) {
+            applePayRef.current = applePay;
+            setApplePayVisible(true);
+          }
+        } catch {
+          // Non disponible (pas de carte enregistrée dans Wallet, etc.).
+        }
+      }
+
+      // Cash App Pay — tokenise via un événement, pas un clic direct.
+      try {
+        const cashAppPay = await payments.cashAppPay(paymentRequest, {
+          redirectURL: window.location.href,
+          referenceId: `don-${Date.now()}`,
+        });
+        await cashAppPay.attach("#cash-app-pay-button", { shape: "semiround", width: "full" });
+        if (cancelled) {
+          await cashAppPay.destroy();
+        } else {
+          cashAppPay.addEventListener("ontokenization", (event) => {
+            const { tokenResult } = event.detail;
+            if (tokenResult.status === "OK" && tokenResult.token) {
+              submitSourceId(tokenResult.token);
+            } else {
+              onError(tokenResult.errors?.[0]?.message ?? t("paiementEchoue"));
+            }
+          });
+          cashAppPayRef.current = cashAppPay;
+          destroyers.push(() => cashAppPay.destroy());
+          setCashAppPayVisible(true);
+        }
+      } catch {
+        // Non disponible sur ce navigateur.
+      }
+    }
+
+    mountMethods();
+    return () => {
+      cancelled = true;
+      destroyers.forEach((destroy) => destroy());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- amountCents est figé pour la durée de vie de cette étape
+  }, []);
+
+  async function handleCardSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!cardRef.current) return;
+    const result = await cardRef.current.tokenize();
+    if (result.status !== "OK" || !result.token) {
+      onError(result.errors?.[0]?.message ?? t("paiementEchoue"));
+      return;
+    }
+    await submitSourceId(result.token);
+  }
+
+  async function handleGooglePayClick() {
+    if (!googlePayRef.current) return;
+    const result = await googlePayRef.current.tokenize();
+    if (result.status !== "OK" || !result.token) {
+      onError(result.errors?.[0]?.message ?? t("paiementEchoue"));
+      return;
+    }
+    await submitSourceId(result.token);
+  }
+
+  async function handleApplePayClick() {
+    if (!applePayRef.current) return;
+    const result = await applePayRef.current.tokenize();
+    if (result.status !== "OK" || !result.token) {
+      onError(result.errors?.[0]?.message ?? t("paiementEchoue"));
+      return;
+    }
+    await submitSourceId(result.token);
+  }
+
   return (
     <Card>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div id="square-card-container" />
-        <div>
-          <Button type="submit" variant="primary" disabled={!cardReady || pending}>
-            {pending ? t("traitement") : t("faireLeDon")}
-          </Button>
-        </div>
-      </form>
+      <div className="flex flex-col gap-5">
+        {(applePayVisible || googlePayVisible || cashAppPayVisible) && (
+          <div className="flex flex-col gap-3">
+            {applePayVisible && (
+              <button
+                type="button"
+                onClick={handleApplePayClick}
+                disabled={pending}
+                className="apple-pay-button h-11 w-full rounded-sm bg-black text-sm font-semibold text-white"
+                style={{ WebkitAppearance: "-apple-pay-button" } as React.CSSProperties}
+              >
+                {t("faireLeDon")}
+              </button>
+            )}
+            <div
+              id="google-pay-button"
+              onClick={handleGooglePayClick}
+              className={cn("h-11", !googlePayVisible && "hidden")}
+            />
+            <div id="cash-app-pay-button" className={cn(!cashAppPayVisible && "hidden")} />
+            <div className="flex items-center gap-3 text-xs text-muted">
+              <div className="h-px flex-1 bg-line" />
+              {t("ouParCarte")}
+              <div className="h-px flex-1 bg-line" />
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleCardSubmit} className="flex flex-col gap-5">
+          <div id="square-card-container" />
+          <div>
+            <Button type="submit" variant="primary" disabled={!cardReady || pending}>
+              {pending ? t("traitement") : t("faireLeDon")}
+            </Button>
+          </div>
+        </form>
+      </div>
     </Card>
   );
 }

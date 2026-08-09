@@ -24,13 +24,13 @@ export function Header() {
 
   return (
     <header className="border-b border-line bg-paper">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:px-6">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 md:px-6">
         <Link href="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
           <Image
             src="/logo-fondation.png"
             alt="Fondation Sarje"
-            width={56}
-            height={56}
+            width={84}
+            height={84}
             priority
           />
         </Link>

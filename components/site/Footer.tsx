@@ -188,6 +188,16 @@ export async function Footer() {
             </Link>
           </nav>
         </div>
+        <div className="mx-auto max-w-5xl px-4 pb-5 text-center text-xs text-white/40 md:px-6">
+          <a
+            href="https://codeshell-green.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-accent hover:underline"
+          >
+            {t("developpePar")}
+          </a>
+        </div>
       </div>
     </footer>
   );

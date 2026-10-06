@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { Card } from "@/components/ui/Card";
 import { prisma } from "@/lib/db";
 import { localize } from "@/lib/localize";
+import { safeQuery } from "@/lib/safe-query";
 
 export async function generateMetadata(
   props: PageProps<"/[locale]/programmes">,
@@ -21,10 +22,14 @@ export default async function ProgrammesPage(
   setRequestLocale(locale);
   const t = await getTranslations("Programmes");
 
-  const programs = await prisma.program.findMany({
-    where: { isActive: true },
-    orderBy: { order: "asc" },
-  });
+  const programs = await safeQuery(
+    () =>
+      prisma.program.findMany({
+        where: { isActive: true },
+        orderBy: { order: "asc" },
+      }),
+    [],
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">

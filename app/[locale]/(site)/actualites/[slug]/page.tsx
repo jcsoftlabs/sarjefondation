@@ -10,12 +10,17 @@ import { formatDate } from "@/lib/format-date";
 import { TiptapRenderer } from "@/components/TiptapRenderer";
 import { localize } from "@/lib/localize";
 import { routing } from "@/i18n/routing";
+import { safeQuery } from "@/lib/safe-query";
 
 export async function generateStaticParams() {
-  const articles = await prisma.article.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true },
-  });
+  const articles = await safeQuery(
+    () =>
+      prisma.article.findMany({
+        where: { status: "PUBLISHED" },
+        select: { slug: true },
+      }),
+    [],
+  );
   return routing.locales.flatMap((locale) =>
     articles.map((article) => ({ locale, slug: article.slug })),
   );
@@ -25,7 +30,7 @@ export async function generateMetadata(
   props: PageProps<"/[locale]/actualites/[slug]">,
 ): Promise<Metadata> {
   const { locale, slug } = await props.params;
-  const article = await prisma.article.findUnique({ where: { slug } });
+  const article = await safeQuery(() => prisma.article.findUnique({ where: { slug } }), null);
   if (!article || article.status !== "PUBLISHED") return {};
   const loc = locale as Locale;
   return {

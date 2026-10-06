@@ -5,6 +5,7 @@ import type { Locale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/db";
 import { localize } from "@/lib/localize";
+import { safeQuery } from "@/lib/safe-query";
 
 export async function generateMetadata(
   props: PageProps<"/[locale]/impact">,
@@ -21,12 +22,19 @@ export default async function ImpactPage(props: PageProps<"/[locale]/impact">) {
   const loc = locale as Locale;
 
   const [impactStats, testimonials, albums] = await Promise.all([
-    prisma.impactStat.findMany({ orderBy: { order: "asc" } }),
-    prisma.testimonial.findMany({ orderBy: { order: "asc" }, include: { photo: true } }),
-    prisma.album.findMany({
-      orderBy: { order: "asc" },
-      include: { cover: true, _count: { select: { photos: true } } },
-    }),
+    safeQuery(() => prisma.impactStat.findMany({ orderBy: { order: "asc" } }), []),
+    safeQuery(
+      () => prisma.testimonial.findMany({ orderBy: { order: "asc" }, include: { photo: true } }),
+      [],
+    ),
+    safeQuery(
+      () =>
+        prisma.album.findMany({
+          orderBy: { order: "asc" },
+          include: { cover: true, _count: { select: { photos: true } } },
+        }),
+      [],
+    ),
   ]);
 
   return (

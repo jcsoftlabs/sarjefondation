@@ -2,6 +2,8 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getSettings } from "@/lib/actions/settings";
+import { defaultSettings } from "@/lib/validators/settings";
+import { safeQuery } from "@/lib/safe-query";
 
 const socialIcons = {
   facebook: (
@@ -28,7 +30,7 @@ const socialIcons = {
 
 export async function Footer() {
   const t = await getTranslations("Footer");
-  const settings = await getSettings();
+  const settings = await safeQuery(() => getSettings(), defaultSettings);
 
   const socials = [
     { key: "facebook", url: settings.socialFacebook, label: "Facebook" },

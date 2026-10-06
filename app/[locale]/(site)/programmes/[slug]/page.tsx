@@ -9,12 +9,17 @@ import { prisma } from "@/lib/db";
 import { TiptapRenderer } from "@/components/TiptapRenderer";
 import { localize } from "@/lib/localize";
 import { routing } from "@/i18n/routing";
+import { safeQuery } from "@/lib/safe-query";
 
 export async function generateStaticParams() {
-  const programs = await prisma.program.findMany({
-    where: { isActive: true },
-    select: { slug: true },
-  });
+  const programs = await safeQuery(
+    () =>
+      prisma.program.findMany({
+        where: { isActive: true },
+        select: { slug: true },
+      }),
+    [],
+  );
   return routing.locales.flatMap((locale) =>
     programs.map((program) => ({ locale, slug: program.slug })),
   );
@@ -24,7 +29,7 @@ export async function generateMetadata(
   props: PageProps<"/[locale]/programmes/[slug]">,
 ): Promise<Metadata> {
   const { locale, slug } = await props.params;
-  const program = await prisma.program.findUnique({ where: { slug } });
+  const program = await safeQuery(() => prisma.program.findUnique({ where: { slug } }), null);
   if (!program || !program.isActive) return {};
   return {
     title: localize(program, "title", locale as Locale),

@@ -7,9 +7,10 @@ import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/db";
 import { localize } from "@/lib/localize";
 import { routing } from "@/i18n/routing";
+import { safeQuery } from "@/lib/safe-query";
 
 export async function generateStaticParams() {
-  const albums = await prisma.album.findMany({ select: { slug: true } });
+  const albums = await safeQuery(() => prisma.album.findMany({ select: { slug: true } }), []);
   return routing.locales.flatMap((locale) =>
     albums.map((album) => ({ locale, slug: album.slug })),
   );
@@ -19,7 +20,7 @@ export async function generateMetadata(
   props: PageProps<"/[locale]/galerie/[slug]">,
 ): Promise<Metadata> {
   const { locale, slug } = await props.params;
-  const album = await prisma.album.findUnique({ where: { slug } });
+  const album = await safeQuery(() => prisma.album.findUnique({ where: { slug } }), null);
   if (!album) return {};
   const loc = locale as Locale;
   return {

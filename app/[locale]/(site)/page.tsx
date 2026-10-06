@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format-date";
 import { localize } from "@/lib/localize";
+import { safeQuery } from "@/lib/safe-query";
 
 export async function generateMetadata(
   props: PageProps<"/[locale]">,
@@ -44,16 +45,24 @@ export default async function HomePage(props: PageProps<"/[locale]">) {
   ];
 
   const [impactStats, featuredPrograms, latestArticle] = await Promise.all([
-    prisma.impactStat.findMany({ orderBy: { order: "asc" } }),
-    prisma.program.findMany({
-      where: { isActive: true },
-      orderBy: { order: "asc" },
-      take: 3,
-    }),
-    prisma.article.findFirst({
-      where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
-    }),
+    safeQuery(() => prisma.impactStat.findMany({ orderBy: { order: "asc" } }), []),
+    safeQuery(
+      () =>
+        prisma.program.findMany({
+          where: { isActive: true },
+          orderBy: { order: "asc" },
+          take: 3,
+        }),
+      [],
+    ),
+    safeQuery(
+      () =>
+        prisma.article.findFirst({
+          where: { status: "PUBLISHED" },
+          orderBy: { publishedAt: "desc" },
+        }),
+      null,
+    ),
   ]);
 
   return (

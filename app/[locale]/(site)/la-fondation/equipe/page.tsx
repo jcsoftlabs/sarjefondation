@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "next-intl";
 import { prisma } from "@/lib/db";
 import { localize } from "@/lib/localize";
+import { safeQuery } from "@/lib/safe-query";
 
 export async function generateMetadata(
   props: PageProps<"/[locale]/la-fondation/equipe">,
@@ -20,10 +21,14 @@ export default async function EquipePage(
   setRequestLocale(locale);
   const t = await getTranslations("Equipe");
 
-  const members = await prisma.teamMember.findMany({
-    orderBy: { order: "asc" },
-    include: { photo: true },
-  });
+  const members = await safeQuery(
+    () =>
+      prisma.teamMember.findMany({
+        orderBy: { order: "asc" },
+        include: { photo: true },
+      }),
+    [],
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">

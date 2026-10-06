@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format-date";
 import { localize } from "@/lib/localize";
+import { safeQuery } from "@/lib/safe-query";
 
 const PAGE_SIZE = 8;
 
@@ -30,13 +31,17 @@ export default async function ActualitesPage(
 
   const where = { status: "PUBLISHED" as const };
   const [articles, total] = await Promise.all([
-    prisma.article.findMany({
-      where,
-      orderBy: { publishedAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.article.count({ where }),
+    safeQuery(
+      () =>
+        prisma.article.findMany({
+          where,
+          orderBy: { publishedAt: "desc" },
+          skip: (page - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+        }),
+      [],
+    ),
+    safeQuery(() => prisma.article.count({ where }), 0),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
